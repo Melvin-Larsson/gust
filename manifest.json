@@ -1,0 +1,6 @@
+{
+    "name": "gust",
+    "description": "Exports content from web page",
+    "version": "1",
+    "manifest_version": 3
+}

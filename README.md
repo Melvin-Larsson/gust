@@ -1,0 +1,1 @@
+Extracts content from webpage

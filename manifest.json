@@ -1,6 +1,10 @@
 {
     "name": "gust",
     "description": "Exports content from web page",
-    "version": "1",
-    "manifest_version": 3
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": ["storage", "activeTab", "scripting"],
+    "action": {
+        "default_popup": "popup.html"
+    }
 }

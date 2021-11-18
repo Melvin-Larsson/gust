@@ -7,7 +7,7 @@ pickElement.addEventListener("click", async() => {
 
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: setupListener, 
+        function: setupListener,
     });
 
 });
@@ -54,12 +54,12 @@ function setupListener(){
         let overlay = document.createElement("div");
         //Style
         overlay.className = className;
-        overlay.style.position = "absolute";
-        overlay.style.top = boundingRect.y;
-        overlay.style.left = boundingRect.x;
-        overlay.style.width = boundingRect.width;
-        overlay.style.height = boundingRect.height;
-        overlay.style.backgroundColor = colorString;
+        overlay.style.position = "fixed";
+        overlay.style.top = boundingRect.y + "px";
+        overlay.style.left = boundingRect.x + "px";
+        overlay.style.width = boundingRect.width + "px";
+        overlay.style.height = boundingRect.height + "px";
+        overlay.style.backgroundColor = colorString
         document.body.appendChild(overlay);
     }
 }

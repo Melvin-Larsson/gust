@@ -40,12 +40,13 @@ function mouseClicked(e){
 }
 function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
     let boundingRect = element.getBoundingClientRect();
+    console.log(window.pageYOffset);
     let overlay = document.createElement("div");
     //Style
     overlay.className = className;
-    overlay.style.position = "fixed";
-    overlay.style.top = boundingRect.y + "px";
-    overlay.style.left = boundingRect.x + "px";
+    overlay.style.position = "absolute";
+    overlay.style.top = boundingRect.top + window.pageYOffset + "px";
+    overlay.style.left = boundingRect.left + window.pageXOffset + "px";
     overlay.style.width = boundingRect.width + "px";
     overlay.style.height = boundingRect.height + "px";
     overlay.style.backgroundColor = colorString

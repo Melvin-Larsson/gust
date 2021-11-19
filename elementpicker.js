@@ -1,16 +1,19 @@
-let array = [];
-let array2 = ["B1", "B2", "B3"];
-array = array.concat(array2);
-console.log(array);
-
-let selectedElements = [];
+let selectors = [];
 const hoverClass = "hover";
 const elementClass = "element";
 //Add message listener
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse){
         if(request.subject === "getElements"){
-            console.log("Sending response " + selectedElements.length);
+            console.log("Sending response " + selectors.length);
+            let selector = "";
+            for(var i = 0; i < selectors.length; i++){
+                selector += selectors[i];
+                if(i < selectors.length - 1){
+                    selector += ", ";
+                }
+            }
+            let selectedElements = document.querySelectorAll(selector);
             let values = [];
             selectedElements.forEach(element => {
                 values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
@@ -44,9 +47,7 @@ function mouseClicked(e){
         selector = tag;
     }
     let newElements = document.querySelectorAll(selector);
-    newElements.forEach(element => {
-        selectedElements.push(element);
-    });
+    selectors.push(selector);
 
     //Put overlay above the similar elements
     newElements.forEach(element => {

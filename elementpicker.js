@@ -56,19 +56,25 @@ function elementSelected(){
     //Detatch listeners
     document.body.removeEventListener('mousemove', mouseMoved);
     document.body.removeEventListener('click', mouseClicked);
-    //Send elements
-    console.log("Sending response " + selectors.length);
-    let selector = "";
-    for(var i = 0; i < selectors.length; i++){
-        selector += selectors[i];
-        if(i < selectors.length - 1){
-            selector += ", ";
+}
+//Add message listener
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse){
+        if(request.subject === "getElements"){
+            console.log("Sending response " + selectors.length);
+            let selector = "";
+            for(var i = 0; i < selectors.length; i++){
+                selector += selectors[i];
+                if(i < selectors.length - 1){
+                    selector += ", ";
+                }
+            }
+            let selectedElements = document.querySelectorAll(selector);
+            let values = [];
+            selectedElements.forEach(element => {
+                values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
+            });
+            sendResponse({elements: values});
         }
     }
-    let selectedElements = document.querySelectorAll(selector);
-    let values = [];
-    selectedElements.forEach(element => {
-        values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
-    });
-    chrome.runtime.sendMessage({subject: "elementSelected", elements: values});
-}
+)

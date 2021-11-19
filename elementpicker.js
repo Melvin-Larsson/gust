@@ -1,16 +1,17 @@
 let selectedElements = [];
+const hoverClass = "hover";
+const elementClass = "element";
+//Add listeners
 document.body.addEventListener('mousemove', mouseMoved);
 document.body.addEventListener('click', mouseClicked);
 function mouseMoved(e){
-    //Remove last overlay
-    removeOverlay("hover");
+    removeOverlay(hoverClass);
     //Add overlay
     let element = document.elementFromPoint(e.x, e.y);
-    createOverlay(element, "hover");
+    createOverlay(element, hoverClass);
 }
 function mouseClicked(e){
-    //Remove last overlay
-    removeOverlay("hover");
+    removeOverlay(hoverClass);
     //Query for elements similar to the clicked
     let element = document.elementFromPoint(e.x, e.y);
     let tag = element.tagName.toLowerCase();
@@ -21,14 +22,14 @@ function mouseClicked(e){
         selector += tag + "." + c;
     });
     }else{
-    selector = tag;
+        selector = tag;
     }
     let newElements = document.querySelectorAll(selector);
     selectedElements.push(newElements);
 
     //Put overlay above the similar elements
     newElements.forEach(element => {
-    createOverlay(element, "element", "rgba(247, 250, 67, 0.5)");
+        createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
     });
 }
 function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){

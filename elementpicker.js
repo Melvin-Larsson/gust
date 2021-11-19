@@ -27,14 +27,7 @@ function mouseClicked(e){
     }else{
         selector = tag;
     }*/
-    let selector = calculateOverlaySelector(element, parentRange);
-    let newElements = document.querySelectorAll(selector);
-    selectors.push(selector);
-    //Put overlay above the similar elements
-    console.log(newElements.length);
-    newElements.forEach(element => {
-        createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
-    });
+    refreshOverlay();
 
     elementSelected();
 }
@@ -78,10 +71,26 @@ function calculateOverlaySelector(element, parentRange){
     console.log("Selector " + selector);
     return selector;
 }
+function refreshOverlay(){
+    removeOverlay(elementClass);
+    selectors = [];
+    clickedElements.forEach(element => {
+        let selector = calculateOverlaySelector(element, parentRange);
+        let newElements = document.querySelectorAll(selector);
+        selectors.push(selector);
+        //Put overlay above the similar elements
+        console.log(newElements.length);
+        newElements.forEach(element => {
+            createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
+        });
+    });
+}
 function removeOverlay(className){
-    let currentOverlay = document.body.querySelector(`.${className}`);
-    if(currentOverlay){
-    document.body.removeChild(currentOverlay);
+    let currentOverlays = document.body.querySelectorAll(`.${className}`);
+    if(currentOverlays){
+        currentOverlays.forEach(overlay => {
+            document.body.removeChild(overlay);
+        });
     }
 }
 function elementSelected(){
@@ -111,6 +120,7 @@ chrome.runtime.onMessage.addListener(
         //Set parent range
         if(request.subject === "setParentRange"){
             parentRange = request.parentRange;
+            refreshOverlay();
         }
     }
 )

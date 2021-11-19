@@ -13,5 +13,13 @@ pickElement.addEventListener("click", async() => {
 });
 //Export button
 exportButton.addEventListener("click", async() => {
-
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+        chrome.tabs.sendMessage(
+                tabs[0].id,
+                {subject: "getElements"},
+                function(response){
+                    console.log("Response:");
+                    console.log(response.elements);
+                });
+    });
 });

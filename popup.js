@@ -14,7 +14,7 @@ pickElement.addEventListener("click", async() => {
 });
 //Export button
 exportButton.addEventListener("click", async() => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+    /*chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
         chrome.tabs.sendMessage(
                 tabs[0].id,
                 {subject: "getElements"},
@@ -25,5 +25,16 @@ exportButton.addEventListener("click", async() => {
                         resultContainer.appendChild(result);
                     });
                 });
-    });
+    });*/
 });
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse){
+        if(request.subject === "elementSelected"){
+            request.elements.forEach(element => {
+                let result = document.createElement("p");
+                result.innerText = element.text;
+                resultContainer.appendChild(result);
+            });
+        }
+    }
+)

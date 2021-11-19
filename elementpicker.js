@@ -1,28 +1,6 @@
 let selectors = [];
 const hoverClass = "hover";
 const elementClass = "element";
-//Add message listener
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse){
-        if(request.subject === "getElements"){
-            console.log("Sending response " + selectors.length);
-            let selector = "";
-            for(var i = 0; i < selectors.length; i++){
-                selector += selectors[i];
-                if(i < selectors.length - 1){
-                    selector += ", ";
-                }
-            }
-            let selectedElements = document.querySelectorAll(selector);
-            let values = [];
-            selectedElements.forEach(element => {
-                values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
-            });
-            sendResponse({elements: values});
-        }
-    }
-)
-
 //Add mouse listeners
 document.body.addEventListener('mousemove', mouseMoved);
 document.body.addEventListener('click', mouseClicked);
@@ -53,6 +31,7 @@ function mouseClicked(e){
     newElements.forEach(element => {
         createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
     });
+    elementSelected();
 }
 function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
     let boundingRect = element.getBoundingClientRect();
@@ -72,4 +51,24 @@ function removeOverlay(className){
     if(currentOverlay){
     document.body.removeChild(currentOverlay);
     }
+}
+function elementSelected(){
+    //Detatch listeners
+    document.body.removeEventListener('mousemove', mouseMoved);
+    document.body.removeEventListener('click', mouseClicked);
+    //Send elements
+    console.log("Sending response " + selectors.length);
+    let selector = "";
+    for(var i = 0; i < selectors.length; i++){
+        selector += selectors[i];
+        if(i < selectors.length - 1){
+            selector += ", ";
+        }
+    }
+    let selectedElements = document.querySelectorAll(selector);
+    let values = [];
+    selectedElements.forEach(element => {
+        values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
+    });
+    chrome.runtime.sendMessage({subject: "elementSelected", elements: values});
 }

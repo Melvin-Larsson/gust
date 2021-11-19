@@ -1,4 +1,5 @@
 let selectors = [];
+let clickedElements = [];
 const hoverClass = "hover";
 const elementClass = "element";
 //Add mouse listeners
@@ -12,8 +13,9 @@ function mouseMoved(e){
 }
 function mouseClicked(e){
     removeOverlay(hoverClass);
-    //Query for elements similar to the clicked
     let element = document.elementFromPoint(e.x, e.y);
+    clickedElements.push(element);
+    //Query for elements similar to the clicked
     let tag = element.tagName.toLowerCase();
     let classList = element.classList;
     let selector = "";
@@ -26,11 +28,11 @@ function mouseClicked(e){
     }
     let newElements = document.querySelectorAll(selector);
     selectors.push(selector);
-
     //Put overlay above the similar elements
     newElements.forEach(element => {
         createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
     });
+
     elementSelected();
 }
 function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
@@ -60,8 +62,8 @@ function elementSelected(){
 //Add message listener
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse){
+        //Return all elements
         if(request.subject === "getElements"){
-            console.log("Sending response " + selectors.length);
             let selector = "";
             for(var i = 0; i < selectors.length; i++){
                 selector += selectors[i];
@@ -70,11 +72,18 @@ chrome.runtime.onMessage.addListener(
                 }
             }
             let selectedElements = document.querySelectorAll(selector);
-            let values = [];
-            selectedElements.forEach(element => {
-                values.push({text: element.textContent, classList: element.classList, tag: element.tagName});
-            });
-            sendResponse({elements: values});
+            sendResponse(createResponseElements(selectedElements));
+        }
+        //Return element
+        else if(request.subject === "getClickedElements"){
+            sendResponse(createResponseElements(clickedElements));
         }
     }
 )
+function createResponseElements(elements){
+    let responseElements = [];
+    elements.forEach(element => {
+        responseElements.push({text: element.textContent, classList: element.classList, tag: element.tagName});
+    });
+    return {elements: responseElements};
+}

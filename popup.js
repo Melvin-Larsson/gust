@@ -1,5 +1,6 @@
 let pickElement = document.getElementById("pickElementButton");
 let exportButton = document.getElementById("exportButton");
+let resultContainer = document.getElementById("resultContainer");
 //Pick element butotn
 pickElement.addEventListener("click", async() => {
     console.log("Click!");
@@ -18,8 +19,11 @@ exportButton.addEventListener("click", async() => {
                 tabs[0].id,
                 {subject: "getElements"},
                 function(response){
-                    console.log("Response:");
-                    console.log(response.elements);
+                    response.elements.forEach(element => {
+                        let result = document.createElement("p");
+                        result.innerText = element.text;
+                        resultContainer.appendChild(result);
+                    });
                 });
     });
 });

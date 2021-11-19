@@ -1,5 +1,6 @@
 let selectors = [];
 let clickedElements = [];
+let parentRange = 3;
 const hoverClass = "hover";
 const elementClass = "element";
 //Add mouse listeners
@@ -16,7 +17,7 @@ function mouseClicked(e){
     let element = document.elementFromPoint(e.x, e.y);
     clickedElements.push(element);
     //Query for elements similar to the clicked
-    let tag = element.tagName.toLowerCase();
+    /*let tag = element.tagName.toLowerCase();
     let classList = element.classList;
     let selector = "";
     if(classList.length > 0){
@@ -25,10 +26,12 @@ function mouseClicked(e){
     });
     }else{
         selector = tag;
-    }
+    }*/
+    let selector = calculateOverlaySelector(element, parentRange);
     let newElements = document.querySelectorAll(selector);
     selectors.push(selector);
     //Put overlay above the similar elements
+    console.log(newElements.length);
     newElements.forEach(element => {
         createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
     });
@@ -47,6 +50,32 @@ function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5
     overlay.style.height = boundingRect.height + "px";
     overlay.style.backgroundColor = colorString
     document.body.appendChild(overlay);
+}
+function calculateOverlaySelector(element, parentRange){
+    //Find parent tags
+    var parentTags = "";
+    var parentClasses = "";
+    var parent = element;
+    for(let i = 0; i < parentRange && parent.parentElement; i++){
+        parent = parent.parentElement;
+        parentClasses = "";
+        parent.classList.forEach(parentClass => {
+            parentClasses += "." + parentClass;
+        });
+        parentTags = parent.tagName.toLowerCase() + parentClasses + " " + parentTags;
+    }
+    var selector = "";
+    for(let i = 0; i < element.classList.length; i++){
+        selector += parentTags + element.tagName.toLowerCase + " " + element.classList[i];
+        if(i < element.classList.length -1){
+            selector += ", ";
+        }
+    }
+    if(element.classList.length == 0){
+        selector = parentTags + element.tagName.toLowerCase();
+    }
+    console.log("Selector " + selector);
+    return selector;
 }
 function removeOverlay(className){
     let currentOverlay = document.body.querySelector(`.${className}`);
@@ -78,12 +107,24 @@ chrome.runtime.onMessage.addListener(
         else if(request.subject === "getClickedElements"){
             sendResponse(createResponseElements(clickedElements));
         }
+        //Set parent range
+        if(request.subject === "setParentRange"){
+            parentRange = request.parentRange;
+        }
     }
 )
 function createResponseElements(elements){
     let responseElements = [];
     elements.forEach(element => {
-        responseElements.push({text: element.textContent, classList: element.classList, tag: element.tagName});
+        //Count parents
+        let parentCount = 0;
+        let parent = element;
+        while(parent.parentElement && parent != document.body){
+            parent = parent.parentElement;
+            parentCount++;
+        }
+        //Create response
+        responseElements.push({text: element.textContent, classList: element.classList, tag: element.tagName, parentCount: parentCount});
     });
     return {elements: responseElements};
 }

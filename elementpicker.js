@@ -1,6 +1,6 @@
 let selectors = [];
 let clickedElements = [];
-let parentRange = 3;
+let parentRange = 0;
 const hoverClass = "hover";
 const elementClass = "element";
 //Add mouse listeners

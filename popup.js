@@ -32,7 +32,7 @@ pickElement.addEventListener("click", async() => {
 });
 //Export button
 exportButton.addEventListener("click", async() => {
-    /*chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
         chrome.tabs.sendMessage(
                 tabs[0].id,
                 {subject: "getElements"},
@@ -43,7 +43,7 @@ exportButton.addEventListener("click", async() => {
                         resultContainer.appendChild(result);
                     });
                 });
-    });*/
+    });
 });
 //Element parent range
 elementParentRange.addEventListener('input', function(){

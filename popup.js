@@ -1,8 +1,38 @@
-let pickElement = document.getElementById("pickElementButton");
+class ElementPicker{
+    constructor(id, parent){
+        //Create elementpicker
+        //Container
+        let container = document.createElement("div");
+        parent.appendChild(container);
+        //Pick element button
+        let pickElementButton = document.createElement("button");
+        pickElementButton.innerText = "Pick an element";
+        container.appendChild(pickElementButton);
+        //Range label
+        let rangeId = "range" + id;
+        let rangeLabel = document.createElement("label");
+        rangeLabel.htmlFor = rangeId;
+        rangeLabel.innerText = 0;
+        container.appendChild(rangeLabel);
+        //Range
+        let range = document.createElement("input");
+        range.id = rangeId;
+        range.type = "range";
+        range.min = 0;
+        range.max = 10;
+        range.value = 1;
+        range.addEventListener('input', function(){
+            rangeLabel.innerText = range.value;
+        });
+        container.appendChild(range);
+    }
+}
+
+//let pickElement = document.getElementById("pickElementButton");
 let exportButton = document.getElementById("exportButton");
-let resultContainer = document.getElementById("resultContainer");
-let elementParentRange = document.getElementById("elementParentRange");
-let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
+//let resultContainer = document.getElementById("resultContainer");
+//let elementParentRange = document.getElementById("elementParentRange");
+//let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
     let tab = tabs[0];
@@ -12,7 +42,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
     });
 });
 
-
+let picker = new ElementPicker("1", document.getElementById("pickElement"));
 
 //Fetch elements
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
@@ -28,10 +58,6 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
                     elementParentRange.max = element.parentCount;
                 });
             });
-});
-
-//Pick element button
-pickElement.addEventListener("click", async() => {
 });
 //Export button
 exportButton.addEventListener("click", async() => {
@@ -49,7 +75,7 @@ exportButton.addEventListener("click", async() => {
     });
 });
 //Element parent range
-elementParentRange.addEventListener('input', function(){
+/*elementParentRange.addEventListener('input', function(){
     console.log("Input");
     elementParentRangeLabel.innerHTML = elementParentRange.value;
     //Update elementpicker selection
@@ -58,7 +84,7 @@ elementParentRange.addEventListener('input', function(){
                 tabs[0].id,
                 {subject: "setParentRange", parentRange: elementParentRange.value});
         });
-});
+});*/
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse){
         if(request.subject === "elementSelected"){

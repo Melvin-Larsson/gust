@@ -3,7 +3,7 @@ let clickedElements = [];
 let parentRange = 0;
 let callbackId = -1;
 const hoverClass = "hover";
-const elementClass = "element";
+let elementClass = "";
 function mouseMoved(e){
     removeOverlay(hoverClass);
     //Add overlay
@@ -16,18 +16,8 @@ function mouseClicked(e){
     clickedElements.push(element);
     //Callback
     chrome.runtime.sendMessage({subject: "elementSelected", callbackId: callbackId, element: createResponseElement(element)});
-    //Query for elements similar to the clicked
-    /*let tag = element.tagName.toLowerCase();
-    let classList = element.classList;
-    let selector = "";
-    if(classList.length > 0){
-    classList.forEach(c => {
-        selector += tag + "." + c;
-    });
-    }else{
-        selector = tag;
-    }*/
-    refreshOverlay();
+    let selector = calculateOverlaySelector(element, parentRange);
+    createOverlayFromSelector(selector, elementClass, "rgba(247, 250, 67, 0.5)");
 
     elementSelected();
 }
@@ -138,7 +128,9 @@ chrome.runtime.onMessage.addListener(
         }
         //Select element
         if(request.subject == "selectElement"){
-            callbackId = request.callbackId;
+           callbackId = request.callbackId;
+           elementClass = "element" + callbackId;
+           removeOverlay(elementClass);
            document.body.addEventListener("click", mouseClicked);
            document.body.addEventListener("mousemove", mouseMoved);
         }

@@ -57,7 +57,8 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
     });
 });
 
-let picker = new ElementPicker("1", document.getElementById("pickElement"));
+let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
+let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
 
 //Fetch elements
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs){

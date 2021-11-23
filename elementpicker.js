@@ -3,9 +3,6 @@ let clickedElements = [];
 let parentRange = 0;
 const hoverClass = "hover";
 const elementClass = "element";
-//Add mouse listeners
-document.body.addEventListener('mousemove', mouseMoved);
-document.body.addEventListener('click', mouseClicked);
 function mouseMoved(e){
     removeOverlay(hoverClass);
     //Add overlay
@@ -31,9 +28,15 @@ function mouseClicked(e){
 
     elementSelected();
 }
+function createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
+    elements = document.body.querySelectorAll(selector);
+    elements.forEach(element => {
+        createOverlay(element, className, colorString);
+    });
+}
+
 function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
     let boundingRect = element.getBoundingClientRect();
-    console.log(window.pageYOffset);
     let overlay = document.createElement("div");
     //Style
     overlay.className = className;
@@ -118,10 +121,18 @@ chrome.runtime.onMessage.addListener(
             sendResponse(createResponseElements(clickedElements));
         }
         //Set parent range
-        if(request.subject === "setParentRange"){
+        else if(request.subject === "setParentRange"){
             parentRange = request.parentRange;
             refreshOverlay();
         }
+        //Add overlay
+        else if(request.subject == "addOverlay"){
+            createOverlayFromSelector(request.selector, request.className);
+        }
+        else if(request.subject == "removeOverlay"){
+            removeOverlay(request.className);
+        }
+
     }
 )
 function createResponseElements(elements){

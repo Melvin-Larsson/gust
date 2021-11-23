@@ -3,6 +3,17 @@ let exportButton = document.getElementById("exportButton");
 let resultContainer = document.getElementById("resultContainer");
 let elementParentRange = document.getElementById("elementParentRange");
 let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
+
+chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+    let tab = tabs[0];
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['elementpicker.js'],
+    });
+});
+
+
+
 //Fetch elements
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
     chrome.tabs.sendMessage(
@@ -21,14 +32,6 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
 
 //Pick element button
 pickElement.addEventListener("click", async() => {
-    console.log("Click!");
-
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['elementpicker.js'],
-    });
 });
 //Export button
 exportButton.addEventListener("click", async() => {

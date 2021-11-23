@@ -7,6 +7,13 @@ class ElementPicker{
         //Pick element button
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
+        pickElementButton.addEventListener("click", e =>{
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+                chrome.tabs.sendMessage(
+                    tabs[0].id,
+                    {subject: "selectElement", callbackId: id});
+            });
+        });
         container.appendChild(pickElementButton);
         //Range label
         let rangeId = "range" + id;
@@ -25,6 +32,14 @@ class ElementPicker{
             rangeLabel.innerText = range.value;
         });
         container.appendChild(range);
+        //Setup on element selected message listener
+        chrome.runtime.onMessage.addListener(
+            function(request, sender, sendResponse){
+                if(request.subject === "elementSelected" && request.callbackId === id){
+                    console.log(request.element);
+                }
+            }
+        )
     }
 }
 
@@ -85,7 +100,7 @@ exportButton.addEventListener("click", async() => {
                 {subject: "setParentRange", parentRange: elementParentRange.value});
         });
 });*/
-chrome.runtime.onMessage.addListener(
+/*chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse){
         if(request.subject === "elementSelected"){
             request.elements.forEach(element => {
@@ -95,7 +110,7 @@ chrome.runtime.onMessage.addListener(
             });
         }
     }
-)
+)*/
 //Returns all unique placeholder string e.g. {0} and {4}
 function getPlaceHolderStrings(string){
     let pattern = /{\d}/g;

@@ -1,6 +1,7 @@
 let selectors = [];
 let clickedElements = [];
 let parentRange = 0;
+let callbackId = -1;
 const hoverClass = "hover";
 const elementClass = "element";
 function mouseMoved(e){
@@ -13,6 +14,8 @@ function mouseClicked(e){
     removeOverlay(hoverClass);
     let element = document.elementFromPoint(e.x, e.y);
     clickedElements.push(element);
+    //Callback
+    chrome.runtime.sendMessage({subject: "elementSelected", callbackId: callbackId, element: createResponseElement(element)});
     //Query for elements similar to the clicked
     /*let tag = element.tagName.toLowerCase();
     let classList = element.classList;
@@ -129,8 +132,15 @@ chrome.runtime.onMessage.addListener(
         else if(request.subject == "addOverlay"){
             createOverlayFromSelector(request.selector, request.className);
         }
+        //Remove overlay
         else if(request.subject == "removeOverlay"){
             removeOverlay(request.className);
+        }
+        //Select element
+        if(request.subject == "selectElement"){
+            callbackId = request.callbackId;
+           document.body.addEventListener("click", mouseClicked);
+           document.body.addEventListener("mousemove", mouseMoved);
         }
 
     }
@@ -138,15 +148,17 @@ chrome.runtime.onMessage.addListener(
 function createResponseElements(elements){
     let responseElements = [];
     elements.forEach(element => {
-        //Count parents
-        let parentCount = 0;
-        let parent = element;
-        while(parent.parentElement && parent != document.body){
-            parent = parent.parentElement;
-            parentCount++;
-        }
-        //Create response
-        responseElements.push({text: element.textContent, classList: element.classList, tag: element.tagName, parentCount: parentCount});
+        responseElements.push(createResponseElement(element));
     });
     return {elements: responseElements};
+}
+function createResponseElement(element){
+    //Count parents
+    let parentCount = 0;
+    let parent = element;
+    while(parent.parentElement && parent != document.body){
+        parent = parent.parentElement;
+        parentCount++;
+    }
+    return {text: element.textContent, classList: element.classList, tag: element.tagName, parentCount: parentCount};
 }

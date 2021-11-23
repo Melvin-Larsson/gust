@@ -67,3 +67,10 @@ chrome.runtime.onMessage.addListener(
         }
     }
 )
+//Returns all unique placeholder string e.g. {0} and {4}
+function getPlaceHolderStrings(string){
+    let pattern = /{\d}/g;
+    let result = string.match(pattern);
+    let uniq = [...new Set(result)];
+    console.log(uniq);   
+}

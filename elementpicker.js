@@ -1,6 +1,3 @@
-let selectors = [];
-let clickedElements = [];
-let parentRange = 0;
 let callbackId = -1;
 const hoverClass = "hover";
 let elementClass = "";
@@ -13,12 +10,8 @@ function mouseMoved(e){
 function mouseClicked(e){
     removeOverlay(hoverClass);
     let element = document.elementFromPoint(e.x, e.y);
-    clickedElements.push(element);
     //Callback
     chrome.runtime.sendMessage({subject: "elementSelected", callbackId: callbackId, element: createResponseElement(element)});
-    let selector = calculateOverlaySelector(element, parentRange);
-    createOverlayFromSelector(selector, elementClass, "rgba(247, 250, 67, 0.5)");
-
     elementSelected();
 }
 function createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
@@ -41,7 +34,7 @@ function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5
     overlay.style.backgroundColor = colorString
     document.body.appendChild(overlay);
 }
-function calculateOverlaySelector(element, parentRange){
+/*function calculateOverlaySelector(element, parentRange){
     //Find parent tags
     var parentTags = "";
     var parentClasses = "";
@@ -66,21 +59,7 @@ function calculateOverlaySelector(element, parentRange){
     }
     console.log("Selector " + selector);
     return selector;
-}
-function refreshOverlay(){
-    removeOverlay(elementClass);
-    selectors = [];
-    clickedElements.forEach(element => {
-        let selector = calculateOverlaySelector(element, parentRange);
-        let newElements = document.querySelectorAll(selector);
-        selectors.push(selector);
-        //Put overlay above the similar elements
-        console.log(newElements.length);
-        newElements.forEach(element => {
-            createOverlay(element, elementClass, "rgba(247, 250, 67, 0.5)");
-        });
-    });
-}
+}*/
 function removeOverlay(className){
     let currentOverlays = document.body.querySelectorAll(`.${className}`);
     if(currentOverlays){
@@ -99,28 +78,12 @@ chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse){
         //Return all elements
         if(request.subject === "getElements"){
-            let selector = "";
-            for(var i = 0; i < selectors.length; i++){
-                selector += selectors[i];
-                if(i < selectors.length - 1){
-                    selector += ", ";
-                }
-            }
-            let selectedElements = document.querySelectorAll(selector);
+            let selectedElements = document.body.querySelectorAll(subject.selector);
             sendResponse(createResponseElements(selectedElements));
-        }
-        //Return element
-        else if(request.subject === "getClickedElements"){
-            sendResponse(createResponseElements(clickedElements));
-        }
-        //Set parent range
-        else if(request.subject === "setParentRange"){
-            parentRange = request.parentRange;
-            refreshOverlay();
         }
         //Add overlay
         else if(request.subject == "addOverlay"){
-            createOverlayFromSelector(request.selector, request.className);
+            createOverlayFromSelector(request.selector, request);
         }
         //Remove overlay
         else if(request.subject == "removeOverlay"){
@@ -146,11 +109,18 @@ function createResponseElements(elements){
 }
 function createResponseElement(element){
     //Count parents
-    let parentCount = 0;
+    let parentSelectors = [];
     let parent = element;
     while(parent.parentElement && parent != document.body){
         parent = parent.parentElement;
-        parentCount++;
+        parentSelectors.push(createSelectorString(parent));
     }
-    return {text: element.textContent, classList: element.classList, tag: element.tagName, parentCount: parentCount};
+    return {text: element.textContent, selector: createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
+}
+function createSelectorString(element){
+    let selector = element.tagName.toLowerCase();
+    element.classList.forEach(elementClass => {
+        selector += "." + elementClass;
+    });
+    return selector;
 }

@@ -6,5 +6,18 @@
     "permissions": ["storage", "activeTab", "scripting"],
     "action": {
         "default_popup": "popup.html"
-    }
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://*/*", "http://*/*"],
+            "css": ["toolWindow.css"],
+            "js": ["elementpicker.js"]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["toolWindow.html"],
+            "matches": ["https://*/*", "http://*/*"]
+        }
+    ] 
 }

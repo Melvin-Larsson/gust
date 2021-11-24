@@ -97,6 +97,9 @@ chrome.runtime.onMessage.addListener(
            document.body.addEventListener("click", mouseClicked);
            document.body.addEventListener("mousemove", mouseMoved);
         }
+        //Add toolmenu
+        if(request.subject == "addToolMenu"){
+        }
 
     }
 )

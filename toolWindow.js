@@ -74,6 +74,7 @@ class ElementPicker{
     selectElement(){
         this.elementClass = "element" + this.id;
         this.removeOverlay(this.elementClass);
+        console.log(this.elementClass);
         document.body.onmousedown = this.mouseClicked.bind(this);
         document.body.onmousemove = this.mouseMoved.bind(this);
     }
@@ -91,7 +92,7 @@ class ElementPicker{
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
         let selector = this.calculateSelector(2);
-        this.createOverlayFromSelector(selector, "element" + this.elementClass)
+        this.createOverlayFromSelector(selector, this.elementClass);
         //Remove listeners
         document.body.onmousedown = null;
         document.body.onmousemove = null;

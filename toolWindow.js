@@ -74,8 +74,8 @@ class ElementPicker{
     selectElement(){
         this.elementClass = "element" + this.id;
         this.removeOverlay(this.elementClass);
-        document.body.addEventListener("click", this.mouseClicked.bind(this));
-        document.body.addEventListener("mousemove", this.mouseMoved.bind(this));
+        document.body.onmousedown = this.mouseClicked.bind(this);
+        document.body.onmousemove = this.mouseMoved.bind(this);
     }
     removeOverlay(className){
         let currentOverlays = document.body.querySelectorAll(`.${className}`);
@@ -91,10 +91,10 @@ class ElementPicker{
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
         let selector = this.calculateSelector(2);
-        this.createOverlayFromSelector(selector, "element" + this.id)
-        //Callback
-        document.body.removeEventListener('mousemove', this.mouseMoved);
-        document.body.removeEventListener('click', this.mouseClicked);
+        this.createOverlayFromSelector(selector, "element" + this.elementClass)
+        //Remove listeners
+        document.body.onmousedown = null;
+        document.body.onmousemove = null;
       }
     }
     mouseMoved(e){

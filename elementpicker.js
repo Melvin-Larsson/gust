@@ -1,6 +1,7 @@
-let callbackId = -1;
+console.log("Elmentpicker init");
 const hoverClass = "hover";
 let elementClass = "";
+let selectionCallback = null;
 function mouseMoved(e){
     removeOverlay(hoverClass);
     //Add overlay
@@ -11,7 +12,7 @@ function mouseClicked(e){
     removeOverlay(hoverClass);
     let element = document.elementFromPoint(e.x, e.y);
     //Callback
-    chrome.runtime.sendMessage({subject: "elementSelected", callbackId: callbackId, element: createResponseElement(element)});
+    callback(element);
     elementSelected();
 }
 function createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
@@ -91,8 +92,6 @@ chrome.runtime.onMessage.addListener(
         }
         //Select element
         if(request.subject == "selectElement"){
-           callbackId = request.callbackId;
-           elementClass = "element" + callbackId;
            removeOverlay(elementClass);
            document.body.addEventListener("click", mouseClicked);
            document.body.addEventListener("mousemove", mouseMoved);
@@ -103,6 +102,14 @@ chrome.runtime.onMessage.addListener(
 
     }
 )
+function selectElement(id, callback){
+  elementClass = "element" + id;
+  removeOverlay(elementClass);
+  document.body.addEventListener("click", mouseClicked);
+  document.body.addEventListener("mousemove", mouseMoved);
+  sellectionCallback = callback;
+}
+
 function createResponseElements(elements){
     let responseElements = [];
     elements.forEach(element => {

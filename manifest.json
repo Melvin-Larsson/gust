@@ -10,8 +10,7 @@
     "content_scripts": [
         {
             "matches": ["https://*/*", "http://*/*"],
-            "css": ["toolWindow.css"],
-            "js": ["elementpicker.js"]
+            "css": ["toolWindow.css"]
         }
     ],
     "web_accessible_resources": [
@@ -19,5 +18,5 @@
             "resources": ["toolWindow.html"],
             "matches": ["https://*/*", "http://*/*"]
         }
-    ] 
+    ]
 }

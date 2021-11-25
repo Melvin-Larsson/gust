@@ -1,3 +1,10 @@
+/*chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+    let tab = tabs[0];
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['elementpicker.js'],
+    });
+});*/
 class ElementPicker{
     constructor(id, parent){
         this.id = id;
@@ -70,14 +77,6 @@ startToolButton.addEventListener('click', e =>{
 //let resultContainer = document.getElementById("resultContainer");
 //let elementParentRange = document.getElementById("elementParentRange");
 //let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
-
-chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-    let tab = tabs[0];
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['elementpicker.js'],
-    });
-});
 let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
 let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
 let pickers = [picker1, picker2];
@@ -139,5 +138,5 @@ function getPlaceHolderStrings(string){
     let pattern = /{\d}/g;
     let result = string.match(pattern);
     let uniq = [...new Set(result)];
-    console.log(uniq);   
+    console.log(uniq);
 }

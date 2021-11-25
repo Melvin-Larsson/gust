@@ -16,8 +16,8 @@ function setUpWindow(){
     //let resultContainer = document.getElementById("resultContainer");
     //let elementParentRange = document.getElementById("elementParentRange");
     //let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
-    let picker1 = new ElementPicker("1", document.getElementById("pickElement"), createOverlayFromSelector, selectElement);
-    let picker2 = new ElementPicker("2", document.getElementById("pickElement"), createOverlayFromSelector, selectElement);
+    let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
+    let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
 
 }
 function dragMouseDown(e){
@@ -36,10 +36,11 @@ function closeDragElement(){
   document.onmousemove = null;
 }
 class ElementPicker{
-    constructor(id, parent, elementSetListener, elementSetter){
+    constructor(id, parent){
         this.id = id;
-        this.elementSetListener = elementSetListener;
-        this.elementSetter = elementSetter;
+        this.hoverClass = "hover";
+        this.elementClass = "";
+        this.selectionCallback = null;
         //Create elementpicker
         //Container
         let container = document.createElement("div");
@@ -48,7 +49,7 @@ class ElementPicker{
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
         pickElementButton.addEventListener("click", e =>{
-          this.elementSetter("element" + this.id, this.setElement.bind(this));
+          this.selectElement("element" + this.id, this.setElement);
         });
         container.appendChild(pickElementButton);
         //Range label
@@ -73,7 +74,7 @@ class ElementPicker{
       console.log("reciving end: " + this);
         this.element = element;
         let selector = this.calculateSelector(2);
-        this.elementSetListener(selector, this)
+        this.createOverlayFromSelector(selector, "element" + this.id)
     }
     calculateSelector(parentRange){
         if(this.element){
@@ -85,6 +86,119 @@ class ElementPicker{
             return selector;
         }
     }
+    mouseMoved(e){
+      console.log("here: " +  this);
+      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+        this.removeOverlay(this.hoverClass);
+        //Add overlay
+        let element = document.elementFromPoint(e.x, e.y);
+        this.createOverlay(element, this.hoverClass);
+      }
+    }
+    mouseClicked(e){
+      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+        this.removeOverlay(this.hoverClass);
+        let element = document.elementFromPoint(e.x, e.y);
+        //Callback
+        console.log("sent element " + element);
+        this.sellectionCallback(this.createResponseElement(element));
+        this.elementSelected();
+      }
+    }
+    createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
+        let elements = document.body.querySelectorAll(selector);
+        elements.forEach(element => {
+            this.createOverlay(element, className, colorString);
+        });
+    }
+
+    createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
+        let boundingRect = element.getBoundingClientRect();
+        let overlay = document.createElement("div");
+        //Style
+        overlay.className = className;
+        overlay.style.position = "absolute";
+        overlay.style.top = boundingRect.top + window.pageYOffset + "px";
+        overlay.style.left = boundingRect.left + window.pageXOffset + "px";
+        overlay.style.width = boundingRect.width + "px";
+        overlay.style.height = boundingRect.height + "px";
+        overlay.style.backgroundColor = colorString
+        document.body.appendChild(overlay);
+    }
+    /*function calculateOverlaySelector(element, parentRange){
+        //Find parent tags
+        var parentTags = "";
+        var parentClasses = "";
+        var parent = element;
+        for(let i = 0; i < parentRange && parent.parentElement; i++){
+            parent = parent.parentElement;
+            parentClasses = "";
+            parent.classList.forEach(parentClass => {
+                parentClasses += "." + parentClass;
+            });
+            parentTags = parent.tagName.toLowerCase() + parentClasses + " " + parentTags;
+        }
+        var selector = "";
+        for(let i = 0; i < element.classList.length; i++){
+            selector += parentTags + element.tagName.toLowerCase + " " + element.classList[i];
+            if(i < element.classList.length -1){
+                selector += ", ";
+            }
+        }
+        if(element.classList.length == 0){
+            selector = parentTags + element.tagName.toLowerCase();
+        }
+        console.log("Selector " + selector);
+        return selector;
+    }*/
+    removeOverlay(className){
+        let currentOverlays = document.body.querySelectorAll(`.${className}`);
+        if(currentOverlays){
+            currentOverlays.forEach(overlay => {
+                document.body.removeChild(overlay);
+            });
+        }
+    }
+    elementSelected(){
+        //Detatch listeners
+        document.body.removeEventListener('mousemove', this.mouseMoved);
+        document.body.removeEventListener('click', this.mouseClicked);
+    }
+    //Add message listener
+    selectElement(id, callback){
+      this.elementClass = "element" + id;
+      this.removeOverlay(this.elementClass);
+      document.body.addEventListener("click", this.mouseClicked.bind(this));
+      document.body.addEventListener("mousemove", this.mouseMoved.bind(this));
+      this.sellectionCallback = callback;
+      console.log("start selection: " + this.sellectionCallback);
+    }
+
+    createResponseElements(elements){
+        let responseElements = [];
+        elements.forEach(element => {
+            responseElements.push(this.createResponseElement(element));
+        });
+        return {elements: responseElements};
+    }
+    createResponseElement(element){
+        //Count parents
+        let parentSelectors = [];
+        let parent = element;
+        while(parent.parentElement && parent != document.body){
+            parent = parent.parentElement;
+            parentSelectors.push(this.createSelectorString(parent));
+        }
+        return {text: element.textContent, selector: this.createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
+    }
+    createSelectorString(element){
+        let selector = element.tagName.toLowerCase();
+        element.classList.forEach(elementClass => {
+            selector += "." + elementClass;
+        });
+        return selector;
+    }
+
 }
 //Fetch elements
 /*chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
@@ -136,145 +250,4 @@ function getPlaceHolderStrings(string){
     let result = string.match(pattern);
     let uniq = [...new Set(result)];
     console.log(uniq);
-}
-const hoverClass = "hover";
-let elementClass = "";
-let selectionCallback = null;
-function mouseMoved(e){
-  if(toolWindow != e.target && !toolWindow.contains(e.target)){
-    removeOverlay(hoverClass);
-    //Add overlay
-    let element = document.elementFromPoint(e.x, e.y);
-    createOverlay(element, hoverClass);
-  }
-}
-function mouseClicked(e){
-  if(toolWindow != e.target && !toolWindow.contains(e.target)){
-    removeOverlay(hoverClass);
-    let element = document.elementFromPoint(e.x, e.y);
-    //Callback
-    console.log("sent element " + element);
-    sellectionCallback(createResponseElement(element));
-    elementSelected();
-  }
-}
-function createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
-    elements = document.body.querySelectorAll(selector);
-    elements.forEach(element => {
-        createOverlay(element, className, colorString);
-    });
-}
-
-function createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
-    let boundingRect = element.getBoundingClientRect();
-    let overlay = document.createElement("div");
-    //Style
-    overlay.className = className;
-    overlay.style.position = "absolute";
-    overlay.style.top = boundingRect.top + window.pageYOffset + "px";
-    overlay.style.left = boundingRect.left + window.pageXOffset + "px";
-    overlay.style.width = boundingRect.width + "px";
-    overlay.style.height = boundingRect.height + "px";
-    overlay.style.backgroundColor = colorString
-    document.body.appendChild(overlay);
-}
-/*function calculateOverlaySelector(element, parentRange){
-    //Find parent tags
-    var parentTags = "";
-    var parentClasses = "";
-    var parent = element;
-    for(let i = 0; i < parentRange && parent.parentElement; i++){
-        parent = parent.parentElement;
-        parentClasses = "";
-        parent.classList.forEach(parentClass => {
-            parentClasses += "." + parentClass;
-        });
-        parentTags = parent.tagName.toLowerCase() + parentClasses + " " + parentTags;
-    }
-    var selector = "";
-    for(let i = 0; i < element.classList.length; i++){
-        selector += parentTags + element.tagName.toLowerCase + " " + element.classList[i];
-        if(i < element.classList.length -1){
-            selector += ", ";
-        }
-    }
-    if(element.classList.length == 0){
-        selector = parentTags + element.tagName.toLowerCase();
-    }
-    console.log("Selector " + selector);
-    return selector;
-}*/
-function removeOverlay(className){
-    let currentOverlays = document.body.querySelectorAll(`.${className}`);
-    if(currentOverlays){
-        currentOverlays.forEach(overlay => {
-            document.body.removeChild(overlay);
-        });
-    }
-}
-function elementSelected(){
-    //Detatch listeners
-    document.body.removeEventListener('mousemove', mouseMoved);
-    document.body.removeEventListener('click', mouseClicked);
-}
-//Add message listener
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse){
-        //Return all elements
-        if(request.subject === "getElements"){
-            let selectedElements = document.body.querySelectorAll(subject.selector);
-            sendResponse(createResponseElements(selectedElements));
-        }
-        //Add overlay
-        else if(request.subject == "addOverlay"){
-            createOverlayFromSelector(request.selector, request);
-        }
-        //Remove overlay
-        else if(request.subject == "removeOverlay"){
-            removeOverlay(request.className);
-        }
-        //Select element
-        if(request.subject == "selectElement"){
-           removeOverlay(elementClass);
-           document.body.addEventListener("click", mouseClicked);
-           document.body.addEventListener("mousemove", mouseMoved);
-        }
-        //Add toolmenu
-        if(request.subject == "addToolMenu"){
-        }
-
-    }
-)
-function selectElement(id, callback){
-  elementClass = "element" + id;
-  removeOverlay(elementClass);
-  document.body.addEventListener("click", mouseClicked);
-  document.body.addEventListener("mousemove", mouseMoved);
-  sellectionCallback = callback;
-  console.log("start selection: " + sellectionCallback);
-}
-
-function createResponseElements(elements){
-    let responseElements = [];
-    elements.forEach(element => {
-        responseElements.push(createResponseElement(element));
-    });
-    return {elements: responseElements};
-}
-function createResponseElement(element){
-    //Count parents
-    let parentSelectors = [];
-    let parent = element;
-    while(parent.parentElement && parent != document.body){
-        parent = parent.parentElement;
-        parentSelectors.push(createSelectorString(parent));
-    }
-    return {text: element.textContent, selector: createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
-}
-function createSelectorString(element){
-    let selector = element.tagName.toLowerCase();
-    element.classList.forEach(elementClass => {
-        selector += "." + elementClass;
-    });
-    return selector;
 }

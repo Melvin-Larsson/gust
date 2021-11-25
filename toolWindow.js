@@ -5,8 +5,8 @@ fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html =
     setUpWindow();
 });
 var toolWindow;
+var offset = {x: 0, y: 0};
 function setUpWindow(){
-    var offset = {x: 0, y: 0};
     toolWindow = document.querySelector('.gustWindow');
     var toolWindowHeader = toolWindow.querySelector('header');
     toolWindowHeader.onmousedown = dragMouseDown;

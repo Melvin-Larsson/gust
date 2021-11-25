@@ -85,11 +85,6 @@ class ElementPicker{
             });
         }
     }
-    setElement(element){
-        this.element = element;
-        let selector = this.calculateSelector(2);
-        this.createOverlayFromSelector(selector, "element" + this.id)
-    }
     mouseClicked(e){
       if(toolWindow != e.target && !toolWindow.contains(e.target)){
         //Create overlay

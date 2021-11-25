@@ -10,26 +10,58 @@ class ToolWindow{
     setUpWindow(){
         this.windowElement = document.querySelector('.gustWindow');
         var toolWindowHeader = this.windowElement.querySelector('header');
-        toolWindowHeader.onmousedown = this.dragMouseDown;
+        toolWindowHeader.onmousedown = this.dragMouseDown.bind(this);
     
         let exportButton = document.getElementById("exportButton");
-        let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
-        let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
+        exportButton.onclick = this.onExportButtonPressed.bind(this);
+        this.formatString = document.getElementById("formatString");
+        let formatButton = document.getElementById("formatButton");
+        formatButton.onclick = this.onFormatButtonPressed.bind(this);
     }
     dragMouseDown(e){
-      var rect = this.windowElement.getBoundingClientRect();
-      offset.x = e.x - rect.x;
-      offset.y = e.y - rect.y;
-      document.onmouseup = this.closeDragElement;
-      document.onmousemove = this.elementDrag;
+        var rect = this.windowElement.getBoundingClientRect();
+        this.offset.x = e.x - rect.x;
+        this.offset.y = e.y - rect.y;
+        document.onmouseup = this.closeDragElement.bind(this);
+        document.onmousemove = this.elementDrag.bind(this);
     }
     elementDrag(e){
-        this.windowElement.style.left = e.x - offset.x + "px";
-        this.windowElement.style.top = e.y - offset.y + "px";
+        this.windowElement.style.left = e.x - this.offset.x + "px";
+        this.windowElement.style.top = e.y - this.offset.y + "px";
     }
     closeDragElement(){
-      document.onmouseup = null;
-      document.onmousemove = null;
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+    onFormatButtonPressed(){
+        let pickerIds = this.getIds(this.formatString.value);
+        this.pickers = [];
+        pickerIds.forEach(id => {
+            this.pickers.push(new ElementPicker(id, document.getElementById("pickElement"), this.windowElement));
+        });
+    }
+    onExportButtonPressed(){
+        let elements = [];
+        let minLength = Number.MAX_SAFE_INTEGER;
+        console.log(this.pickers.length)
+        this.pickers.forEach(picker =>{
+            elements.push(picker.getSelectedStrings());
+            if(elements[elements.length - 1].length < minLength){
+                minLength = elements[elements.length - 1].length;
+            }
+        });
+        console.log(minLength);
+    }
+    //Returns all unique placeholder string e.g. {0} and {4}
+    getIds(string){
+        let pattern = /{(\d+)}/g;
+        let result = string.matchAll(pattern);
+        let uniq = [...new Set(result)];
+        //Extract ids (e.g. Turn {53} to 53)
+        for(let i = 0; i < uniq.length; i++){
+            uniq[i] = uniq[i][1];
+        }
+        return uniq;
     }
 }
 class ElementPicker{
@@ -94,7 +126,6 @@ class ElementPicker{
         }
     }
     mouseClicked(e){
-
     if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
         //Create overlay
         this.removeOverlay(ElementPicker.HOVER_CLASS);
@@ -169,13 +200,14 @@ class ElementPicker{
         });
         return selector;
     }
-
+    getSelectedStrings(){
+        let selector = this.calculateSelector(this.range.value);
+        let elements = document.body.querySelectorAll(selector);
+        let strings = [];
+        for(let i = 0; i < elements.length; i++){
+            strings.push(elements[i].innerText);
+        }
+        return strings;
+    }
 }
 new ToolWindow();
-//Returns all unique placeholder string e.g. {0} and {4}
-function getPlaceHolderStrings(string){
-    let pattern = /{\d}/g;
-    let result = string.match(pattern);
-    let uniq = [...new Set(result)];
-    console.log(uniq);
-}

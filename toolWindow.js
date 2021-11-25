@@ -1,42 +1,45 @@
-//Somehow adds toolWindow to page
-console.log(chrome.runtime.getURL('/toolWindow.html'))
-fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html => {
-    document.body.insertAdjacentHTML('beforeend', html);
-    setUpWindow();
-});
-var toolWindow;
-var offset = {x: 0, y: 0};
-function setUpWindow(){
-    toolWindow = document.querySelector('.gustWindow');
-    var toolWindowHeader = toolWindow.querySelector('header');
-    toolWindowHeader.onmousedown = dragMouseDown;
-
-    let exportButton = document.getElementById("exportButton");
-    let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
-    let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
-}
-function dragMouseDown(e){
-  var rect = toolWindow.getBoundingClientRect();
-  offset.x = e.x - rect.x;
-  offset.y = e.y - rect.y;
-  document.onmouseup = closeDragElement;
-  document.onmousemove = elementDrag;
-}
-function elementDrag(e){
-  toolWindow.style.left = e.x - offset.x + "px";
-  toolWindow.style.top = e.y - offset.y + "px";
-}
-function closeDragElement(){
-  document.onmouseup = null;
-  document.onmousemove = null;
+class ToolWindow{
+    constructor(){
+        this.offset = {y:0,x:0};
+        //Somehow adds toolWindow to page
+        fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html => {
+            document.body.insertAdjacentHTML('beforeend', html);
+            this.setUpWindow();
+        });
+    }
+    setUpWindow(){
+        this.windowElement = document.querySelector('.gustWindow');
+        var toolWindowHeader = this.windowElement.querySelector('header');
+        toolWindowHeader.onmousedown = this.dragMouseDown;
+    
+        let exportButton = document.getElementById("exportButton");
+        let picker1 = new ElementPicker("1", document.getElementById("pickElement"));
+        let picker2 = new ElementPicker("2", document.getElementById("pickElement"));
+    }
+    dragMouseDown(e){
+      var rect = this.windowElement.getBoundingClientRect();
+      offset.x = e.x - rect.x;
+      offset.y = e.y - rect.y;
+      document.onmouseup = this.closeDragElement;
+      document.onmousemove = this.elementDrag;
+    }
+    elementDrag(e){
+        this.windowElement.style.left = e.x - offset.x + "px";
+        this.windowElement.style.top = e.y - offset.y + "px";
+    }
+    closeDragElement(){
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
 }
 class ElementPicker{
     static get HOVER_CLASS(){
         return 'hover';
     }
-    constructor(id, parent){
+    constructor(id, parent, excludedElement = null){
         this.id = id;
         this.elementSelectionAccuracy = 0;
+        this.excludedElement = excludedElement;
         //Create elementpicker
         //Container
         let container = document.createElement("div");
@@ -91,7 +94,8 @@ class ElementPicker{
         }
     }
     mouseClicked(e){
-      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+
+    if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
         //Create overlay
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
@@ -106,7 +110,7 @@ class ElementPicker{
       }
     }
     mouseMoved(e){
-      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+    if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         //Add overlay
         let element = document.elementFromPoint(e.x, e.y);
@@ -167,10 +171,7 @@ class ElementPicker{
     }
 
 }
-//Export button
-function exportButtonListener(){
-
-}
+new ToolWindow();
 //Returns all unique placeholder string e.g. {0} and {4}
 function getPlaceHolderStrings(string){
     let pattern = /{\d}/g;

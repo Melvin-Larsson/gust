@@ -36,11 +36,12 @@ function closeDragElement(){
   document.onmousemove = null;
 }
 class ElementPicker{
+    static get HOVER_CLASS(){
+        return 'hover';
+    }
+
     constructor(id, parent){
         this.id = id;
-        this.hoverClass = "hover";
-        this.elementClass = "";
-        this.selectionCallback = null;
         //Create elementpicker
         //Container
         let container = document.createElement("div");
@@ -49,7 +50,7 @@ class ElementPicker{
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
         pickElementButton.addEventListener("click", e =>{
-          this.selectElement("element" + this.id, this.setElement);
+          this.selectElement();
         });
         container.appendChild(pickElementButton);
         //Range label
@@ -70,11 +71,44 @@ class ElementPicker{
         });
         container.appendChild(range);
     }
+    selectElement(){
+        this.elementClass = "element" + this.id;
+        this.removeOverlay(this.elementClass);
+        document.body.addEventListener("click", this.mouseClicked.bind(this));
+        document.body.addEventListener("mousemove", this.mouseMoved.bind(this));
+    }
+    removeOverlay(className){
+        let currentOverlays = document.body.querySelectorAll(`.${className}`);
+        if(currentOverlays){
+            currentOverlays.forEach(overlay => {
+                document.body.removeChild(overlay);
+            });
+        }
+    }
     setElement(element){
-      console.log("reciving end: " + this);
         this.element = element;
         let selector = this.calculateSelector(2);
         this.createOverlayFromSelector(selector, "element" + this.id)
+    }
+    mouseClicked(e){
+      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+        //Create overlay
+        this.removeOverlay(ElementPicker.HOVER_CLASS);
+        this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
+        let selector = this.calculateSelector(2);
+        this.createOverlayFromSelector(selector, "element" + this.id)
+        //Callback
+        document.body.removeEventListener('mousemove', this.mouseMoved);
+        document.body.removeEventListener('click', this.mouseClicked);
+      }
+    }
+    mouseMoved(e){
+      if(toolWindow != e.target && !toolWindow.contains(e.target)){
+        this.removeOverlay(ElementPicker.HOVER_CLASS);
+        //Add overlay
+        let element = document.elementFromPoint(e.x, e.y);
+        this.createOverlay(element, ElementPicker.HOVER_CLASS);
+      }
     }
     calculateSelector(parentRange){
         if(this.element){
@@ -82,28 +116,8 @@ class ElementPicker{
             for (let i = 0; i < parentRange && i < this.element.parentSelectors.length; i++){
                 selector = this.element.parentSelectors[i] + " " + selector;
             }
-            console.log(selector);
             return selector;
         }
-    }
-    mouseMoved(e){
-      console.log("here: " +  this);
-      if(toolWindow != e.target && !toolWindow.contains(e.target)){
-        this.removeOverlay(this.hoverClass);
-        //Add overlay
-        let element = document.elementFromPoint(e.x, e.y);
-        this.createOverlay(element, this.hoverClass);
-      }
-    }
-    mouseClicked(e){
-      if(toolWindow != e.target && !toolWindow.contains(e.target)){
-        this.removeOverlay(this.hoverClass);
-        let element = document.elementFromPoint(e.x, e.y);
-        //Callback
-        console.log("sent element " + element);
-        this.sellectionCallback(this.createResponseElement(element));
-        this.elementSelected();
-      }
     }
     createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
         let elements = document.body.querySelectorAll(selector);
@@ -111,7 +125,6 @@ class ElementPicker{
             this.createOverlay(element, className, colorString);
         });
     }
-
     createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
         let boundingRect = element.getBoundingClientRect();
         let overlay = document.createElement("div");
@@ -125,55 +138,6 @@ class ElementPicker{
         overlay.style.backgroundColor = colorString
         document.body.appendChild(overlay);
     }
-    /*function calculateOverlaySelector(element, parentRange){
-        //Find parent tags
-        var parentTags = "";
-        var parentClasses = "";
-        var parent = element;
-        for(let i = 0; i < parentRange && parent.parentElement; i++){
-            parent = parent.parentElement;
-            parentClasses = "";
-            parent.classList.forEach(parentClass => {
-                parentClasses += "." + parentClass;
-            });
-            parentTags = parent.tagName.toLowerCase() + parentClasses + " " + parentTags;
-        }
-        var selector = "";
-        for(let i = 0; i < element.classList.length; i++){
-            selector += parentTags + element.tagName.toLowerCase + " " + element.classList[i];
-            if(i < element.classList.length -1){
-                selector += ", ";
-            }
-        }
-        if(element.classList.length == 0){
-            selector = parentTags + element.tagName.toLowerCase();
-        }
-        console.log("Selector " + selector);
-        return selector;
-    }*/
-    removeOverlay(className){
-        let currentOverlays = document.body.querySelectorAll(`.${className}`);
-        if(currentOverlays){
-            currentOverlays.forEach(overlay => {
-                document.body.removeChild(overlay);
-            });
-        }
-    }
-    elementSelected(){
-        //Detatch listeners
-        document.body.removeEventListener('mousemove', this.mouseMoved);
-        document.body.removeEventListener('click', this.mouseClicked);
-    }
-    //Add message listener
-    selectElement(id, callback){
-      this.elementClass = "element" + id;
-      this.removeOverlay(this.elementClass);
-      document.body.addEventListener("click", this.mouseClicked.bind(this));
-      document.body.addEventListener("mousemove", this.mouseMoved.bind(this));
-      this.sellectionCallback = callback;
-      console.log("start selection: " + this.sellectionCallback);
-    }
-
     createResponseElements(elements){
         let responseElements = [];
         elements.forEach(element => {
@@ -200,50 +164,10 @@ class ElementPicker{
     }
 
 }
-//Fetch elements
-/*chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-    chrome.tabs.sendMessage(
-            tabs[0].id,
-            {subject: "getClickedElements"},
-            function(response){
-                response.elements.forEach(element => {
-                    let result = document.createElement("p");
-                    result.innerText = element.text + "  " + element.parentCount;
-                    resultContainer.appendChild(result);
-                    elementParentRange.style.visibility = "visible";
-                    elementParentRange.max = element.parentCount;
-                });
-            });
-});*/
 //Export button
 function exportButtonListener(){
 
 }
-/*exportButton.addEventListener("click", async() => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-        chrome.tabs.sendMessage(
-                tabs[0].id,
-                {subject: "getElements"},
-                function(response){
-                    response.elements.forEach(element => {
-                        let result = document.createElement("p");
-                        result.innerText = element.text;
-                        resultContainer.appendChild(result);
-                    });
-                });
-    });
-});*/
-//Element parent range
-/*elementParentRange.addEventListener('input', function(){
-    console.log("Input");
-    elementParentRangeLabel.innerHTML = elementParentRange.value;
-    //Update elementpicker selection
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-        chrome.tabs.sendMessage(
-                tabs[0].id,
-                {subject: "setParentRange", parentRange: elementParentRange.value});
-        });
-});*/
 //Returns all unique placeholder string e.g. {0} and {4}
 function getPlaceHolderStrings(string){
     let pattern = /{\d}/g;

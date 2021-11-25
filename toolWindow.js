@@ -16,12 +16,9 @@ function setUpWindow(){
     //let resultContainer = document.getElementById("resultContainer");
     //let elementParentRange = document.getElementById("elementParentRange");
     //let elementParentRangeLabel = document.getElementById("elementParentRangeLabel");
-    let picker1 = new ElementPicker("1", document.getElementById("pickElement"), elementSet, selectElement);
-    let picker2 = new ElementPicker("2", document.getElementById("pickElement"), elementSet, selectElement);
+    let picker1 = new ElementPicker("1", document.getElementById("pickElement"), createOverlayFromSelector, selectElement);
+    let picker2 = new ElementPicker("2", document.getElementById("pickElement"), createOverlayFromSelector, selectElement);
 
-}
-function elementSet(selector, picker){
-  createOverlayFromSelector(selector, "element" + picker.id);
 }
 function dragMouseDown(e){
   var rect = toolWindow.getBoundingClientRect();
@@ -51,7 +48,7 @@ class ElementPicker{
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
         pickElementButton.addEventListener("click", e =>{
-          this.elementSetter(this.id, this.setElement.bind(this));
+          this.elementSetter("element" + this.id, this.setElement.bind(this));
         });
         container.appendChild(pickElementButton);
         //Range label

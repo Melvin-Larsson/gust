@@ -41,6 +41,8 @@ class ToolWindow{
         });
     }
     onExportButtonPressed(){
+        this.windowElement.style.overflowY = "scroll"; //setting this property in css causes lag for some reason
+        let ids = this.getIds(this.formatString.value);
         let elements = [];
         let minLength = Number.MAX_SAFE_INTEGER;
         let totalSelector = "";
@@ -58,16 +60,24 @@ class ToolWindow{
         let currentString = format;
         let lastPicker = 0;
         let orderedElements = document.body.querySelectorAll(totalSelector);
+        let resultContainer = document.getElementById("result");
         for (var i = 0; i < orderedElements.length; i++) {
             let orderedElement = orderedElements[i];
             for (var j = 0; j < elements.length; j++) {
               let elementList = elements[j];
               if(elementList.elements[elementList.currentPosition] == orderedElement.innerText){
                 if(j < lastPicker){
-                  console.log(currentString);
-                  currentString = format;
+                    ids.forEach(id =>{
+                        currentString = currentString.replaceAll(`{${id}}`, "");
+                    });
+                    let resultElement = document.createElement("p");
+                    resultElement.innerText = currentString;
+                    resultContainer.appendChild(resultElement);
+                    currentString = format;
                 }
-                currentString.replaceAll(`{${j}}`, elementList.elements[elementList.currentPosition]);
+                //console.log(`{${ids[j]}}`);
+                currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition] + `<br>{${ids[j]}}`);
+                //rconsole.log(elementList.elements[elementList.currentPosition]);
                 elementList.currentPosition++;
                 lastPicker = j;
               }

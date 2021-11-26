@@ -11,9 +11,10 @@ class ToolWindow{
         this.windowElement = document.querySelector('.gustWindow');
         var toolWindowHeader = this.windowElement.querySelector('header');
         toolWindowHeader.onmousedown = this.dragMouseDown.bind(this);
-
+        //Export
         let exportButton = document.getElementById("exportButton");
         exportButton.onclick = this.onExportButtonPressed.bind(this);
+        //Format
         this.formatString = document.getElementById("formatString");
         let formatButton = document.getElementById("formatButton");
         formatButton.onclick = this.onFormatButtonPressed.bind(this);
@@ -37,7 +38,7 @@ class ToolWindow{
         let pickerIds = this.getIds(this.formatString.value);
         this.pickers = [];
         pickerIds.forEach(id => {
-            this.pickers.push(new ElementPicker(id, document.getElementById("pickElement"), this.windowElement));
+            this.pickers.push(new ElementPicker(id, pickerIds, document.getElementById("pickElement"), this.windowElement));
         });
     }
     onExportButtonPressed(){
@@ -100,8 +101,10 @@ class ElementPicker{
     static get HOVER_CLASS(){
         return 'hover';
     }
-    constructor(id, parent, excludedElement = null){
-        this.id = id;
+
+    constructor(id, idOptions, parent, excludedElement = null){
+        this.elementClass = "element" + id;
+        this.id = idOptions[0];
         this.elementSelectionAccuracy = 0;
         this.excludedElement = excludedElement;
         //Create elementpicker
@@ -116,7 +119,7 @@ class ElementPicker{
         });
         container.appendChild(pickElementButton);
         //Range label
-        let rangeId = "range" + id;
+        let rangeId = "range" + this.id;
         let rangeLabel = document.createElement("label");
         rangeLabel.htmlFor = rangeId;
         rangeLabel.innerText = 0;
@@ -133,6 +136,30 @@ class ElementPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
+        //Id picker
+        this.idPicker = document.createElement("select");
+        this.idPicker.onchange = (event) => {
+            this.id = event.target.value;
+        };
+        container.appendChild(this.idPicker);
+        this.setIdOptions(idOptions);
+    }
+    setIdOptions(idOptions){
+        //Remove old options
+        for(let i = 0; i < this.idPicker.options.length; i++){
+            thid.idPicker.remove(i);
+        }
+        //Add new options
+        let option;
+        for(let i = 0; i < idOptions.length; i++){
+            option = document.createElement("option");
+            option.text = idOptions[i];
+            this.idPicker.add(option);
+        }
+        //Set new selected value if necessary
+        if(!idOptions.includes(this.id)){
+            this.id = idOptions[0];
+        }
     }
     onRangeMoved(){
         this.rangeLabel.innerText = parseInt(this.range.value) + 1;
@@ -143,7 +170,6 @@ class ElementPicker{
     }
 
     selectElement(){
-        this.elementClass = "element" + this.id;
         this.removeOverlay(this.elementClass);
         console.log(this.elementClass);
         document.body.onmousedown = this.mouseClicked.bind(this);

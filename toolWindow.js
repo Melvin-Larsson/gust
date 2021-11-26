@@ -11,7 +11,7 @@ class ToolWindow{
         this.windowElement = document.querySelector('.gustWindow');
         var toolWindowHeader = this.windowElement.querySelector('header');
         toolWindowHeader.onmousedown = this.dragMouseDown.bind(this);
-    
+
         let exportButton = document.getElementById("exportButton");
         exportButton.onclick = this.onExportButtonPressed.bind(this);
         this.formatString = document.getElementById("formatString");
@@ -43,14 +43,29 @@ class ToolWindow{
     onExportButtonPressed(){
         let elements = [];
         let minLength = Number.MAX_SAFE_INTEGER;
-        console.log(this.pickers.length)
+        let totalSelector = "";
+        const format = this.formatString.value;
         this.pickers.forEach(picker =>{
-            elements.push(picker.getSelectedStrings());
+            elements.push({currentPosition: 0, elements: picker.getSelectedStrings()});
+            totalSelector += picker.selector;
+            if(picker != this.pickers[this.pickers.length - 1]){
+              totalSelector += ", ";
+            }
             if(elements[elements.length - 1].length < minLength){
                 minLength = elements[elements.length - 1].length;
             }
         });
-        console.log(minLength);
+        let orderedElements = document.body.querySelectorAll(totalSelector);
+        for (var i = 0; i < orderedElements.length; i++) {
+            let orderedElement = orderedElements[i];
+            for (var j = 0; j < elements.length; j++) {
+              let elementList = elements[j];
+              if(elementList.elements[elementList.currentPosition] == orderedElement.innerText){
+                console.log(elementList.elements[elementList.currentPosition]);
+                elementList.currentPosition++;
+              }
+            }
+        }
     }
     //Returns all unique placeholder string e.g. {0} and {4}
     getIds(string){
@@ -106,8 +121,8 @@ class ElementPicker{
         this.rangeLabel.innerText = parseInt(this.range.value) + 1;
         //Update overlays
         this.removeOverlay(this.elementClass);
-        let selector = this.calculateSelector(this.range.value);
-        this.createOverlayFromSelector(selector, this.elementClass);
+        this.selector = this.calculateSelector(this.range.value);
+        this.createOverlayFromSelector(this.selector, this.elementClass);
     }
 
     selectElement(){
@@ -130,8 +145,8 @@ class ElementPicker{
         //Create overlay
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
-        let selector = this.calculateSelector(this.range.value);
-        this.createOverlayFromSelector(selector, this.elementClass);
+        this.selector = this.calculateSelector(this.range.value);
+        this.createOverlayFromSelector(this.selector, this.elementClass);
         //Setup range
         this.range.style.visibility = "visible";
         this.range.max = this.element.parentSelectors.length;

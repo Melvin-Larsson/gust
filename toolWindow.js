@@ -55,14 +55,21 @@ class ToolWindow{
                 minLength = elements[elements.length - 1].length;
             }
         });
+        let currentString = format;
+        let lastPicker = 0;
         let orderedElements = document.body.querySelectorAll(totalSelector);
         for (var i = 0; i < orderedElements.length; i++) {
             let orderedElement = orderedElements[i];
             for (var j = 0; j < elements.length; j++) {
               let elementList = elements[j];
               if(elementList.elements[elementList.currentPosition] == orderedElement.innerText){
-                console.log(elementList.elements[elementList.currentPosition]);
+                if(j < lastPicker){
+                  console.log(currentString);
+                  currentString = format;
+                }
+                currentString.replaceAll(`{${j}}`, elementList.elements[elementList.currentPosition]);
                 elementList.currentPosition++;
+                lastPicker = j;
               }
             }
         }

@@ -1,14 +1,44 @@
 .gustWindow{
-    background-color: green;
-    position: fixed;
-    left: 800px;
-    top: 100px;
     width: 500px;
-    height: 300px;
+    min-height: 300px;
+    max-height: 900px;
+    position: fixed;
+    top: 100px;
+    left: 800px;
     z-index: 9999;
+    box-shadow: 1px 1px 5px 0px gray;
+    background-color: #ededed;
+    display: flex;
+    flex-direction: column;
 }
 .gustWindow header{
     height: 20px;
+    min-height: 20px;
     width: 100%;
-    background-color: orange;
+    background-color: #dedede;
+}
+.gustWindow body{
+    padding: 10rem;
+}
+.gustWindow textarea{
+    height: 100px;
+    min-height: 100px;
+}
+.gustWindow button{
+    width: 20%;
+    margin: 0.5rem;
+}
+.gustWindow .elementPicker{
+    margin: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+.gustWindow .elementPicker input{
+    margin: 0.5rem;
+    width: 100%;
+}
+.gustWindow .elementPicker label{
+    display: flex;
+    justify-content: center;
+    width: 35px;
 }

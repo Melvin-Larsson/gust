@@ -110,7 +110,15 @@ class ElementPicker{
         //Create elementpicker
         //Container
         let container = document.createElement("div");
+        container.classList.add("elementPicker");
         parent.appendChild(container);
+        //Id picker
+        this.idPicker = document.createElement("select");
+        this.idPicker.onchange = (event) => {
+            this.id = event.target.value;
+        };
+        container.appendChild(this.idPicker);
+        this.setIdOptions(idOptions);
         //Pick element button
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
@@ -136,13 +144,6 @@ class ElementPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
-        //Id picker
-        this.idPicker = document.createElement("select");
-        this.idPicker.onchange = (event) => {
-            this.id = event.target.value;
-        };
-        container.appendChild(this.idPicker);
-        this.setIdOptions(idOptions);
     }
     setIdOptions(idOptions){
         //Remove old options

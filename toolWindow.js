@@ -42,7 +42,7 @@ class ToolWindow{
         });
     }
     onExportButtonPressed(){
-        this.windowElement.style.overflowY = "scroll"; //setting this property in css causes lag for some reason
+        this.windowElement.querySelector('.container').style.overflowY = "scroll"; //setting this property in css causes lag for some reason
         let ids = this.getIds(this.formatString.value);
         let elements = [];
         let minLength = Number.MAX_SAFE_INTEGER;

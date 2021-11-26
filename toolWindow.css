@@ -1,7 +1,7 @@
 .gustWindow{
     width: 500px;
     min-height: 300px;
-    max-height: 900px;
+    max-height: 600px;
     position: fixed;
     top: 100px;
     left: 800px;
@@ -17,8 +17,12 @@
     width: 100%;
     background-color: #dedede;
 }
-.gustWindow body{
-    padding: 10rem;
+.gustWindow .container{
+    width: 96%;
+    display: flex;
+    flex-direction: column;
+    padding: 2%;
+    overflow-x:hidden;
 }
 .gustWindow textarea{
     height: 100px;
@@ -26,15 +30,13 @@
 }
 .gustWindow button{
     width: 20%;
-    margin: 0.5rem;
+    margin: 0.5rem 0;
 }
 .gustWindow .elementPicker{
-    margin: 0.5rem;
     display: flex;
     align-items: center;
 }
 .gustWindow .elementPicker input{
-    margin: 0.5rem;
     width: 100%;
 }
 .gustWindow .elementPicker label{

@@ -49,21 +49,36 @@ class ToolWindow{
     }
     onExportButtonPressed(){
         this.windowElement.querySelector('.container').style.overflowY = "scroll"; //setting this property in css causes lag for some reason
+        const format = this.formatString.value;
         let ids = this.getIds(this.formatString.value);
         let elements = [];
         let minLength = Number.MAX_SAFE_INTEGER;
         let totalSelector = "";
-        const format = this.formatString.value;
-        this.pickers.forEach(picker =>{
-            elements.push({currentPosition: 0, elements: picker.getSelectedStrings()});
-            totalSelector += picker.selector;
-            if(picker != this.pickers[this.pickers.length - 1]){
-              totalSelector += ", ";
+        //Merge selectors from pickers that use the same placeholder id
+        let selectors = [];
+        let unusedPickers = [...this.pickers];
+        for(let i = 0; i < unusedPickers.length; i++){
+            selectors.push(unusedPickers[i].calculateSelector());
+            for(let j = i + 1; j < unusedPickers.length; j++){
+                if(unusedPickers[j].idPicker.value == unusedPickers[i].idPicker.value){
+                    selectors[i] += ", " + unusedPickers[j].calculateSelector();
+                    unusedPickers.splice(j, 1);
+                }
             }
-            if(elements[elements.length - 1].length < minLength){
-                minLength = elements[elements.length - 1].length;
-            }
+        }
+        //Fill elements and create totalSelector
+        selectors.forEach(selector =>{
+            let tempElements = document.querySelectorAll(selector);
+            let tempElementTexts = [];
+            tempElements.forEach(element =>{
+                tempElementTexts.push(element.innerText);
+            });
+            elements.push({currentPosition: 0, elements: tempElementTexts});
+            totalSelector += selector + ", ";
         });
+        //Remove last ", " from totalSelector
+        totalSelector = totalSelector.substring(0, totalSelector.length - 2);
+
         let currentString = format;
         let lastPicker = 0;
         let orderedElements = document.body.querySelectorAll(totalSelector);
@@ -172,10 +187,9 @@ class ElementPicker{
         this.rangeLabel.innerText = parseInt(this.range.value) + 1;
         //Update overlays
         this.removeOverlay(this.overlayClass);
-        this.selector = this.calculateSelector(this.range.value);
+        this.selector = this.calculateSelector();
         this.createOverlayFromSelector(this.selector, this.overlayClass);
     }
-
     selectElement(){
         this.removeOverlay(this.overlayClass);
         console.log(this.overlayClass);
@@ -195,7 +209,7 @@ class ElementPicker{
         //Create overlay
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
-        this.selector = this.calculateSelector(this.range.value);
+        this.selector = this.calculateSelector();
         this.createOverlayFromSelector(this.selector, this.overlayClass);
         //Setup range
         this.range.style.visibility = "visible";
@@ -213,10 +227,10 @@ class ElementPicker{
         this.createOverlay(element, ElementPicker.HOVER_CLASS);
       }
     }
-    calculateSelector(parentRange){
+    calculateSelector(){
         if(this.element){
             let selector = this.element.selector;
-            for (let i = 0; i < parentRange && i < this.element.parentSelectors.length; i++){
+            for (let i = 0; i < this.range.value && i < this.element.parentSelectors.length; i++){
                 selector = this.element.parentSelectors[i] + " " + selector;
             }
             return selector;
@@ -265,7 +279,7 @@ class ElementPicker{
         });
         return selector;
     }
-    getSelectedStrings(){
+    /*getSelectedStrings(){
         let selector = this.calculateSelector(this.range.value);
         let elements = document.body.querySelectorAll(selector);
         let strings = [];
@@ -273,6 +287,6 @@ class ElementPicker{
             strings.push(elements[i].innerText);
         }
         return strings;
-    }
+    }*/
 }
 new ToolWindow();

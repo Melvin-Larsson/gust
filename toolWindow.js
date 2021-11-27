@@ -1,6 +1,7 @@
 class ToolWindow{
     constructor(){
         this.offset = {y:0,x:0};
+        this.pickers = [];
         //Somehow adds toolWindow to page
         fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html => {
             document.body.insertAdjacentHTML('beforeend', html);
@@ -36,10 +37,15 @@ class ToolWindow{
     }
     onFormatButtonPressed(){
         let pickerIds = this.getIds(this.formatString.value);
-        this.pickers = [];
-        pickerIds.forEach(id => {
-            this.pickers.push(new ElementPicker(id, pickerIds, document.getElementById("pickElement"), this.windowElement));
+        //Update current pickers with the new ids
+        this.pickers.forEach(picker =>{
+            picker.setAvailiableIds(pickerIds);
         });
+        //Add new pickers while there are more pickerIds than pickers
+        while(pickerIds.length > this.pickers.length){
+            this.pickers.push(new ElementPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
+
+        }
     }
     onExportButtonPressed(){
         this.windowElement.querySelector('.container').style.overflowY = "scroll"; //setting this property in css causes lag for some reason
@@ -97,14 +103,14 @@ class ToolWindow{
         return uniq;
     }
 }
+let lastElementId = 0;
 class ElementPicker{
     static get HOVER_CLASS(){
         return 'hover';
     }
 
-    constructor(id, idOptions, parent, excludedElement = null){
-        this.elementClass = "element" + id;
-        this.id = idOptions[0];
+    constructor(idOptions, parent, excludedElement = null){
+        this.overlayClass = "element" + lastElementId;
         this.elementSelectionAccuracy = 0;
         this.excludedElement = excludedElement;
         //Create elementpicker
@@ -114,11 +120,8 @@ class ElementPicker{
         parent.appendChild(container);
         //Id picker
         this.idPicker = document.createElement("select");
-        this.idPicker.onchange = (event) => {
-            this.id = event.target.value;
-        };
         container.appendChild(this.idPicker);
-        this.setIdOptions(idOptions);
+        this.setAvailiableIds(idOptions);
         //Pick element button
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
@@ -127,7 +130,7 @@ class ElementPicker{
         });
         container.appendChild(pickElementButton);
         //Range label
-        let rangeId = "range" + this.id;
+        let rangeId = "range" + lastElementId;
         let rangeLabel = document.createElement("label");
         rangeLabel.htmlFor = rangeId;
         rangeLabel.innerText = 0;
@@ -144,11 +147,14 @@ class ElementPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
+        //Increase lastElementId
+        lastElementId++;
     }
-    setIdOptions(idOptions){
+    setAvailiableIds(idOptions){
+        let currentId = this.idPicker.value;
         //Remove old options
-        for(let i = 0; i < this.idPicker.options.length; i++){
-            thid.idPicker.remove(i);
+        while(this.idPicker.options.length > 0){
+            this.idPicker.remove(0);
         }
         //Add new options
         let option;
@@ -157,22 +163,22 @@ class ElementPicker{
             option.text = idOptions[i];
             this.idPicker.add(option);
         }
-        //Set new selected value if necessary
-        if(!idOptions.includes(this.id)){
-            this.id = idOptions[0];
+        //Set selected value to old selected value if possible
+        if(idOptions.includes(currentId)){
+            this.idPicker.value = currentId;
         }
     }
     onRangeMoved(){
         this.rangeLabel.innerText = parseInt(this.range.value) + 1;
         //Update overlays
-        this.removeOverlay(this.elementClass);
+        this.removeOverlay(this.overlayClass);
         this.selector = this.calculateSelector(this.range.value);
-        this.createOverlayFromSelector(this.selector, this.elementClass);
+        this.createOverlayFromSelector(this.selector, this.overlayClass);
     }
 
     selectElement(){
-        this.removeOverlay(this.elementClass);
-        console.log(this.elementClass);
+        this.removeOverlay(this.overlayClass);
+        console.log(this.overlayClass);
         document.body.onmousedown = this.mouseClicked.bind(this);
         document.body.onmousemove = this.mouseMoved.bind(this);
     }
@@ -190,7 +196,7 @@ class ElementPicker{
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
         this.selector = this.calculateSelector(this.range.value);
-        this.createOverlayFromSelector(this.selector, this.elementClass);
+        this.createOverlayFromSelector(this.selector, this.overlayClass);
         //Setup range
         this.range.style.visibility = "visible";
         this.range.max = this.element.parentSelectors.length;

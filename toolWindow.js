@@ -66,7 +66,8 @@ class ToolWindow{
                 }
             }
         }
-        //Fill elements and create totalSelector
+        console.log(selectors[0]);
+        //Fetch elements and create totalSelector
         selectors.forEach(selector =>{
             let tempElements = document.querySelectorAll(selector);
             let tempElementTexts = [];
@@ -229,7 +230,7 @@ class ElementPicker{
         if(this.element){
             let selector = this.element.selector;
             for (let i = 0; i < this.range.value && i < this.element.parentSelectors.length; i++){
-                selector = this.element.parentSelectors[i] + " " + selector;
+                selector = this.element.parentSelectors[i] + ">" + selector;
             }
             return selector;
         }

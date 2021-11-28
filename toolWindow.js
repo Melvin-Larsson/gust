@@ -70,39 +70,36 @@ class ToolWindow{
         //Fetch elements and create totalSelector
         selectors.forEach(selector =>{
             let tempElements = document.querySelectorAll(selector);
-            let tempElementTexts = [];
-            tempElements.forEach(element =>{
-                tempElementTexts.push(element.innerText);
-            });
-            elements.push({currentPosition: 0, elements: tempElementTexts});
+            elements.push({currentPosition: 0, elements: tempElements});
             totalSelector += selector + ", ";
         });
         //Remove last ", " from totalSelector
         totalSelector = totalSelector.substring(0, totalSelector.length - 2);
-
+        console.log(totalSelector);
         let currentString = format;
         let orderedElements = document.body.querySelectorAll(totalSelector);
         let resultContainer = document.getElementById("result");
         for (let i = 0; i < orderedElements.length; i++) {
             let orderedElement = orderedElements[i];
-            for (let j = 0; j < elements.length; j++) {
-              let elementList = elements[j];
-              if(elementList.elements[elementList.currentPosition] == orderedElement.innerText){
-                if(j == 0){
-                    ids.forEach(id =>{
-                        currentString = currentString.replaceAll(`{${id}}`, "");
-                    });
-                    let resultElement = document.createElement("p");
-                    resultElement.innerText = currentString;
-                    resultContainer.appendChild(resultElement);
-                    currentString = format;
+                console.log(orderedElement.innerText);
+                for (let j = 0; j < elements.length; j++) {
+                  let elementList = elements[j];
+                  if(elementList.elements[elementList.currentPosition] == orderedElement){
+                    if(j == 0){
+                        ids.forEach(id =>{
+                            currentString = currentString.replaceAll(`{${id}}`, "");
+                        });
+                        let resultElement = document.createElement("p");
+                        resultElement.innerText = currentString;
+                        resultContainer.appendChild(resultElement);
+                        currentString = format;
+                    }
+                    //console.log(`{${ids[j]}}`);
+                    currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
+                    //rconsole.log(elementList.elements[elementList.currentPosition]);
+                    elementList.currentPosition++;
+                  }
                 }
-                //console.log(`{${ids[j]}}`);
-                currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition] + `<br>{${ids[j]}}`);
-                //rconsole.log(elementList.elements[elementList.currentPosition]);
-                elementList.currentPosition++;
-              }
-            }
         }
     }
     //Returns all unique placeholder string e.g. {0} and {4}
@@ -209,6 +206,7 @@ class ElementPicker{
         this.removeOverlay(ElementPicker.HOVER_CLASS);
         this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
         this.selector = this.calculateSelector();
+        console.log(document.querySelectorAll(".cont div, .cont div.test, .cont#test, .test, #test"));//------------------------------------
         this.createOverlayFromSelector(this.selector, this.overlayClass);
         //Setup range
         this.range.style.visibility = "visible";

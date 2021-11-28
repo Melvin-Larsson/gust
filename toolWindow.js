@@ -43,7 +43,7 @@ class ToolWindow{
         });
         //Add new pickers while there are more pickerIds than pickers
         while(pickerIds.length > this.pickers.length){
-            this.pickers.push(new ElementPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
+            this.pickers.push(new ElementGroupPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
 
         }
     }
@@ -115,15 +115,103 @@ class ToolWindow{
     }
 }
 let lastElementId = 0;
-class ElementPicker{
-    static get HOVER_CLASS(){
-        return 'hover';
+class ElementOverlay{
+    constructor(colorString = "rgba(72, 159, 240, 0.5)"){
+        this.className = "element" + lastElementId;
+        lastElementId++;
+        this.colorString = colorString;
     }
+    removeOverlay(){
+        let currentOverlays = document.body.querySelectorAll(`.${this.className}`);
+        if(currentOverlays){
+            currentOverlays.forEach(overlay => {
+                document.body.removeChild(overlay);
+            });
+        }
+    }
+    createOverlay(element){
+        let boundingRect = element.getBoundingClientRect();
+        let overlay = document.createElement("div");
+        //Style
+        overlay.className = this.className;
+        overlay.style.position = "absolute";
+        overlay.style.top = boundingRect.top + window.pageYOffset + "px";
+        overlay.style.left = boundingRect.left + window.pageXOffset + "px";
+        overlay.style.width = boundingRect.width + "px";
+        overlay.style.height = boundingRect.height + "px";
+        overlay.style.backgroundColor = this.colorString
+        document.body.appendChild(overlay);
+    }
+    createOverlayFromSelector(selector){
+        let elements = document.body.querySelectorAll(selector);
+        elements.forEach(element => {
+            this.createOverlay(element);
+        });
+    }
+}
 
+class ElementPicker{
+    constructor(excludedElement = null){
+        this.excludedElement = excludedElement;
+        this.overlay = new ElementOverlay();
+        this.listener = null;
+    }
+    setOnElementSelectedListener(listener){
+        this.listener = listener;
+    }
+    selectElement(){
+        this.overlay.removeOverlay();
+        document.body.onmousedown = this.mouseClicked.bind(this);
+        document.body.onmousemove = this.mouseMoved.bind(this);
+    }
+    mouseClicked(e){
+        if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
+            //Create overlay
+            this.overlay.removeOverlay();
+            let element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
+            //Remove listeners
+            document.body.onmousedown = null;
+            document.body.onmousemove = null;
+            //Callback
+            if(this.listener){
+                this.listener(element);
+            }
+        }
+    }
+    mouseMoved(e){
+        if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
+            this.overlay.removeOverlay();
+            //Add overlay
+            let element = document.elementFromPoint(e.x, e.y);
+            this.overlay.createOverlay(element);
+        }
+    }
+    createResponseElement(element){
+        //Count parents
+        let parentSelectors = [];
+        let parent = element;
+        while(parent.parentElement && parent != document.body){
+            parent = parent.parentElement;
+            parentSelectors.push(this.createSelectorString(parent));
+        }
+        return {text: element.textContent, selector: this.createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
+    }
+    createSelectorString(element){
+        let selector = element.tagName.toLowerCase();
+        element.classList.forEach(elementClass => {
+            selector += "." + elementClass;
+        });
+        return selector;
+    }
+}
+
+class ElementGroupPicker{
     constructor(idOptions, parent, excludedElement = null){
         this.overlayClass = "element" + lastElementId;
         this.elementSelectionAccuracy = 0;
-        this.excludedElement = excludedElement;
+        this.elementPicker = new ElementPicker(excludedElement);
+        this.elementPicker.setOnElementSelectedListener(this.onElementSelected.bind(this));
+        this.overlay = new ElementOverlay()
         //Create elementpicker
         //Container
         let container = document.createElement("div");
@@ -137,7 +225,7 @@ class ElementPicker{
         let pickElementButton = document.createElement("button");
         pickElementButton.innerText = "Pick an element";
         pickElementButton.addEventListener("click", e =>{
-          this.selectElement();
+            this.elementPicker.selectElement();
         });
         container.appendChild(pickElementButton);
         //Range label
@@ -158,8 +246,15 @@ class ElementPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
-        //Increase lastElementId
-        lastElementId++;
+    }
+    onElementSelected(element){
+        this.overlay.removeOverlay();
+        this.element = element;
+        this.selector = this.calculateSelector();
+        this.overlay.createOverlayFromSelector(this.selector);
+        //Setup range
+        this.range.style.visibility = "visible";
+        this.range.style.max = this.element.parentSelectors.length;
     }
     setAvailiableIds(idOptions){
         let currentId = this.idPicker.value;
@@ -182,47 +277,9 @@ class ElementPicker{
     onRangeMoved(){
         this.rangeLabel.innerText = parseInt(this.range.value) + 1;
         //Update overlays
-        this.removeOverlay(this.overlayClass);
+        this.overlay.removeOverlay();
         this.selector = this.calculateSelector();
-        this.createOverlayFromSelector(this.selector, this.overlayClass);
-    }
-    selectElement(){
-        this.removeOverlay(this.overlayClass);
-        console.log(this.overlayClass);
-        document.body.onmousedown = this.mouseClicked.bind(this);
-        document.body.onmousemove = this.mouseMoved.bind(this);
-    }
-    removeOverlay(className){
-        let currentOverlays = document.body.querySelectorAll(`.${className}`);
-        if(currentOverlays){
-            currentOverlays.forEach(overlay => {
-                document.body.removeChild(overlay);
-            });
-        }
-    }
-    mouseClicked(e){
-    if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
-        //Create overlay
-        this.removeOverlay(ElementPicker.HOVER_CLASS);
-        this.element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
-        this.selector = this.calculateSelector();
-        console.log(document.querySelectorAll(".cont div, .cont div.test, .cont#test, .test, #test"));//------------------------------------
-        this.createOverlayFromSelector(this.selector, this.overlayClass);
-        //Setup range
-        this.range.style.visibility = "visible";
-        this.range.max = this.element.parentSelectors.length;
-        //Remove listeners
-        document.body.onmousedown = null;
-        document.body.onmousemove = null;
-      }
-    }
-    mouseMoved(e){
-    if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
-        this.removeOverlay(ElementPicker.HOVER_CLASS);
-        //Add overlay
-        let element = document.elementFromPoint(e.x, e.y);
-        this.createOverlay(element, ElementPicker.HOVER_CLASS);
-      }
+        this.overlay.createOverlayFromSelector(this.selector);
     }
     calculateSelector(){
         if(this.element){
@@ -232,49 +289,6 @@ class ElementPicker{
             }
             return selector;
         }
-    }
-    createOverlayFromSelector(selector, className, colorString = "rgba(72, 159, 240, 0.5)"){
-        let elements = document.body.querySelectorAll(selector);
-        elements.forEach(element => {
-            this.createOverlay(element, className, colorString);
-        });
-    }
-    createOverlay(element, className, colorString = "rgba(72, 159, 240, 0.5)"){
-        let boundingRect = element.getBoundingClientRect();
-        let overlay = document.createElement("div");
-        //Style
-        overlay.className = className;
-        overlay.style.position = "absolute";
-        overlay.style.top = boundingRect.top + window.pageYOffset + "px";
-        overlay.style.left = boundingRect.left + window.pageXOffset + "px";
-        overlay.style.width = boundingRect.width + "px";
-        overlay.style.height = boundingRect.height + "px";
-        overlay.style.backgroundColor = colorString
-        document.body.appendChild(overlay);
-    }
-    createResponseElements(elements){
-        let responseElements = [];
-        elements.forEach(element => {
-            responseElements.push(this.createResponseElement(element));
-        });
-        return {elements: responseElements};
-    }
-    createResponseElement(element){
-        //Count parents
-        let parentSelectors = [];
-        let parent = element;
-        while(parent.parentElement && parent != document.body){
-            parent = parent.parentElement;
-            parentSelectors.push(this.createSelectorString(parent));
-        }
-        return {text: element.textContent, selector: this.createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
-    }
-    createSelectorString(element){
-        let selector = element.tagName.toLowerCase();
-        element.classList.forEach(elementClass => {
-            selector += "." + elementClass;
-        });
-        return selector;
     }
     /*getSelectedStrings(){
         let selector = this.calculateSelector(this.range.value);

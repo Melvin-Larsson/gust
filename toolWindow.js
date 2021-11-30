@@ -1,10 +1,10 @@
 let ignoredElements = [];
-//bra idé, är nästan lite sugen på göra en sån
 class ToolWindow{
     constructor(){
         this.offset = {y:0,x:0};
         this.pickers = [];
         //Somehow adds toolWindow to page
+        console.log(chrome.runtime.getURL("/close.png"))
         fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html => {
             document.body.insertAdjacentHTML('beforeend', html);
             this.setUpWindow();
@@ -12,8 +12,14 @@ class ToolWindow{
     }
     setUpWindow(){
         this.windowElement = document.querySelector('.gustWindow');
-        var toolWindowHeader = this.windowElement.querySelector('header');
+        let toolWindowHeader = this.windowElement.querySelector('header');
         toolWindowHeader.onmousedown = this.dragMouseDown.bind(this);
+        //Close window button
+        let closeWindowButton = document.getElementById("closeWindowButton");
+        closeWindowButton.onclick = function(){
+            document.body.removeChild(this.windowElement);
+        }.bind(this);
+
         //Export
         let exportButton = document.getElementById("exportButton");
         exportButton.onclick = this.onExportButtonPressed.bind(this);
@@ -358,14 +364,12 @@ class ElementGroupPicker{
         });
         return selector;
     }
-    /*getSelectedStrings(){
-        let selector = this.calculateSelector(this.range.value);
-        let elements = document.body.querySelectorAll(selector);
-        let strings = [];
-        for(let i = 0; i < elements.length; i++){
-            strings.push(elements[i].innerText);
-        }
-        return strings;
-    }*/
 }
-new ToolWindow();
+//Listen for request to add tool window
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse){
+        if(request.subject === "createToolWindow"){
+            new ToolWindow();
+        }
+    }
+)

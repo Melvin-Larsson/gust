@@ -10,12 +10,13 @@
     "content_scripts": [
         {
             "matches": ["https://*/*", "http://*/*"],
+            "js": ["toolWindow.js"],
             "css": ["toolWindow.css"]
         }
     ],
     "web_accessible_resources": [
         {
-            "resources": ["toolWindow.html"],
+            "resources": ["toolWindow.html", "close.png"],
             "matches": ["https://*/*", "http://*/*"]
         }
     ]

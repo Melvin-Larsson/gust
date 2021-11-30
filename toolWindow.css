@@ -16,6 +16,18 @@
     min-height: 20px;
     width: 100%;
     background-color: #dedede;
+    display: flex;
+    justify-content: end;
+    align-items: baseline;
+}
+#closeWindowButton{
+    background-image: url("chrome-extension://fgjjhpcgenalnkfeddmlhdhbkobdekbl/close.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    margin: 3px;
 }
 .gustWindow .container{
     width: 96%;

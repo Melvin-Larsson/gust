@@ -56,3 +56,6 @@
     justify-content: center;
     width: 35px;
 }
+.gustWindow .elementPicker .range{
+    padding: 0;
+}

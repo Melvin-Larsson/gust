@@ -4,7 +4,6 @@ class ToolWindow{
         this.offset = {y:0,x:0};
         this.pickers = [];
         //Somehow adds toolWindow to page
-        console.log(chrome.runtime.getURL("/close.png"))
         fetch(chrome.runtime.getURL('/toolWindow.html')).then(r => r.text()).then(html => {
             document.body.insertAdjacentHTML('beforeend', html);
             this.setUpWindow();
@@ -252,14 +251,15 @@ class ElementGroupPicker{
         let rangeLabel = document.createElement("label");
         rangeLabel.htmlFor = rangeId;
         rangeLabel.innerText = 0;
+        rangeLabel.style.visibility = "hidden";
         this.rangeLabel = rangeLabel;
         container.appendChild(rangeLabel);
         //Range
         let range = document.createElement("input");
+        range.classList.add("range");
         range.id = rangeId;
         range.type = "range";
         range.min = 0;
-        range.max = 10;
         range.value = this.elementSelectionAccuracy;
         range.style.visibility = "hidden";
         range.addEventListener('input', this.onRangeMoved.bind(this));
@@ -304,7 +304,8 @@ class ElementGroupPicker{
         this.overlay.createOverlayFromSelector(this.selector);
         //Setup range
         this.range.style.visibility = "visible";
-        this.range.style.max = this.element.parentSelectors.length;
+        this.range.max = this.element.parentSelectors.length-1;
+        this.rangeLabel.style.visibility = "visible";
     }
     setAvailiableIds(idOptions){
         let currentId = this.idPicker.value;

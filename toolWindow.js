@@ -1,3 +1,4 @@
+let ignoredElements = [];
 class ToolWindow{
     constructor(){
         this.offset = {y:0,x:0};
@@ -19,6 +20,9 @@ class ToolWindow{
         this.formatString = document.getElementById("formatString");
         let formatButton = document.getElementById("formatButton");
         formatButton.onclick = this.onFormatButtonPressed.bind(this);
+        //Remove single element
+        this.removeSingleElementButton = document.getElementById("removeSingleElementButton");
+        this.removeSingleElementButton.onclick = this.onRemoveSingleElementButtonPressed.bind(this);
     }
     dragMouseDown(e){
         var rect = this.windowElement.getBoundingClientRect();
@@ -77,12 +81,8 @@ class ToolWindow{
         let currentString = format;
         let orderedElements = document.body.querySelectorAll(totalSelector);
         let resultContainer = document.getElementById("result");
-        console.log(totalSelector);
-        console.log(elements);
-        console.log(orderedElements);
         for (let i = 0; i < orderedElements.length; i++) {
             let orderedElement = orderedElements[i];
-                console.log(orderedElement.innerText);
                 for (let j = 0; j < elements.length; j++) {
                   let elementList = elements[j];
                   if(elementList.elements[elementList.currentPosition] == orderedElement){
@@ -95,13 +95,30 @@ class ToolWindow{
                         resultContainer.appendChild(resultElement);
                         currentString = format;
                     }
-                    //console.log(`{${ids[j]}}`);
-                    currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
-                    //rconsole.log(elementList.elements[elementList.currentPosition]);
+                    //Ignore if in ignoredElements list
+                    if(!ignoredElements.includes(orderedElement)){
+                        currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
+                    }
                     elementList.currentPosition++;
                   }
                 }
         }
+    }
+    onRemoveSingleElementButtonPressed(){
+        let picker = new ElementPicker(this.windowElement);
+        picker.setOnElementSelectedListener(function(element, x, y){
+            //Remove all overlays
+            let pattern = /element\d+/
+            let topElement = element;
+            while(topElement.classList.length == 1 && topElement.classList[0].match(pattern)){
+                topElement.parentElement.removeChild(topElement);
+                topElement = document.elementFromPoint(x,y);
+            }
+            //Add element to ignored list
+            ignoredElements.push(topElement);
+            
+        });
+        picker.selectElement();
     }
     //Returns all unique placeholder string e.g. {0} and {4}
     getIds(string){
@@ -174,7 +191,7 @@ class ElementPicker{
             document.body.onmousemove = null;
             //Callback
             if(this.listener){
-                this.listener(document.elementFromPoint(e.x, e.y));
+                this.listener(document.elementFromPoint(e.x, e.y), e.x, e.y);
             }
         }
     }
@@ -284,7 +301,6 @@ class ElementGroupPicker{
         this.overlay.createOverlayFromSelector(this.selector);
     }
     calculateSelector(){
-        console.log(this.singleElementsIds);
         let selector = "";
         //Add single picked elements
         for(let i = 0; i < this.singleElementsIds.length; i++){
@@ -298,7 +314,6 @@ class ElementGroupPicker{
             }  
         }
         selector = selector.substring(0, selector.length - 2);
-        console.log(selector);
         return selector;
     }
     createResponseElement(element){

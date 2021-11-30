@@ -66,7 +66,6 @@ class ToolWindow{
                 }
             }
         }
-        console.log(selectors[0]);
         //Fetch elements and create totalSelector
         selectors.forEach(selector =>{
             let tempElements = document.querySelectorAll(selector);
@@ -75,10 +74,12 @@ class ToolWindow{
         });
         //Remove last ", " from totalSelector
         totalSelector = totalSelector.substring(0, totalSelector.length - 2);
-        console.log(totalSelector);
         let currentString = format;
         let orderedElements = document.body.querySelectorAll(totalSelector);
         let resultContainer = document.getElementById("result");
+        console.log(totalSelector);
+        console.log(elements);
+        console.log(orderedElements);
         for (let i = 0; i < orderedElements.length; i++) {
             let orderedElement = orderedElements[i];
                 console.log(orderedElement.innerText);
@@ -168,13 +169,12 @@ class ElementPicker{
         if(!this.excludedElement || (this.excludedElement != e.target && !this.excludedElement.contains(e.target))){
             //Create overlay
             this.overlay.removeOverlay();
-            let element = this.createResponseElement(document.elementFromPoint(e.x, e.y));
             //Remove listeners
             document.body.onmousedown = null;
             document.body.onmousemove = null;
             //Callback
             if(this.listener){
-                this.listener(element);
+                this.listener(document.elementFromPoint(e.x, e.y));
             }
         }
     }
@@ -186,32 +186,17 @@ class ElementPicker{
             this.overlay.createOverlay(element);
         }
     }
-    createResponseElement(element){
-        //Count parents
-        let parentSelectors = [];
-        let parent = element;
-        while(parent.parentElement && parent != document.body){
-            parent = parent.parentElement;
-            parentSelectors.push(this.createSelectorString(parent));
-        }
-        return {text: element.textContent, selector: this.createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
-    }
-    createSelectorString(element){
-        let selector = element.tagName.toLowerCase();
-        element.classList.forEach(elementClass => {
-            selector += "." + elementClass;
-        });
-        return selector;
-    }
 }
 
 class ElementGroupPicker{
     constructor(idOptions, parent, excludedElement = null){
         this.overlayClass = "element" + lastElementId;
         this.elementSelectionAccuracy = 0;
+        this.excludedElement = excludedElement;
         this.elementPicker = new ElementPicker(excludedElement);
         this.elementPicker.setOnElementSelectedListener(this.onElementSelected.bind(this));
         this.overlay = new ElementOverlay()
+        this.singleElementsIds = [];
         //Create elementpicker
         //Container
         let container = document.createElement("div");
@@ -246,10 +231,27 @@ class ElementGroupPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
+        //Add single element
+        let addSingleElementButton = document.createElement("button")
+        addSingleElementButton.innerText = "Add single element";
+        addSingleElementButton.onclick = this.onAddSingleElementButtonPressed.bind(this);
+        container.appendChild(addSingleElementButton);
+    }
+    onAddSingleElementButtonPressed(){
+        let picker = new ElementPicker(this.excludedElement);
+        picker.setOnElementSelectedListener(function(element){
+            if(!element.id){
+                element.id = "singleElement" + this.singleElementsIds.length
+            }
+            this.singleElementsIds.push(element.id);
+            //Refresh overlay
+            this.overlay.createOverlay(element);
+        }.bind(this));
+        picker.selectElement();
     }
     onElementSelected(element){
         this.overlay.removeOverlay();
-        this.element = element;
+        this.element = this.createResponseElement(element);
         this.selector = this.calculateSelector();
         this.overlay.createOverlayFromSelector(this.selector);
         //Setup range
@@ -282,13 +284,39 @@ class ElementGroupPicker{
         this.overlay.createOverlayFromSelector(this.selector);
     }
     calculateSelector(){
+        console.log(this.singleElementsIds);
+        let selector = "";
+        //Add single picked elements
+        for(let i = 0; i < this.singleElementsIds.length; i++){
+            selector += "#" + this.singleElementsIds[i] + ", ";
+        }
+        //Add other elements
         if(this.element){
-            let selector = this.element.selector;
+            selector = this.element.selector + ", " + selector;
             for (let i = 0; i < this.range.value && i < this.element.parentSelectors.length; i++){
                 selector = this.element.parentSelectors[i] + ">" + selector;
-            }
-            return selector;
+            }  
         }
+        selector = selector.substring(0, selector.length - 2);
+        console.log(selector);
+        return selector;
+    }
+    createResponseElement(element){
+        //Count parents
+        let parentSelectors = [];
+        let parent = element;
+        while(parent.parentElement && parent != document.body){
+            parent = parent.parentElement;
+            parentSelectors.push(this.createSelectorString(parent));
+        }
+        return {text: element.textContent, selector: this.createSelectorString(element), tag: element.tagName, parentSelectors: parentSelectors};
+    }
+    createSelectorString(element){
+        let selector = element.tagName.toLowerCase();
+        element.classList.forEach(elementClass => {
+            selector += "." + elementClass;
+        });
+        return selector;
     }
     /*getSelectedStrings(){
         let selector = this.calculateSelector(this.range.value);

@@ -121,7 +121,13 @@ class ToolWindow{
     }
     onAddElementPicker(){
         let pickerIds = this.getIds(this.formatString.value);
-        this.pickers.push(new ElementGroupPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
+        let newPicker = new ElementGroupPicker(pickerIds, document.getElementById("pickElement"), this.windowElement)
+        newPicker.setOnRemovedListener(this.removePicker.bind(this));
+        this.pickers.push(newPicker);
+    }
+    removePicker(removedPicker){
+        let index = this.pickers.indexOf(removedPicker);
+        this.pickers.splice(index, 1);
     }
     //Returns all unique placeholder string e.g. {0} and {4}
     getIds(string){
@@ -217,10 +223,12 @@ class ElementGroupPicker{
         this.elementPicker.setOnElementSelectedListener(this.onElementSelected.bind(this));
         this.overlay = new ElementOverlay()
         this.singleElementsIds = [];
+        this.removedListener = null;
         //Create elementpicker
         //Container
         let container = document.createElement("div");
         container.classList.add("elementPicker");
+        this.container = container;
         parent.appendChild(container);
         //Id picker
         this.idPicker = document.createElement("select");
@@ -251,11 +259,25 @@ class ElementGroupPicker{
         range.addEventListener('input', this.onRangeMoved.bind(this));
         this.range = range;
         container.appendChild(range);
+        //Remove button
+        let removeButton = document.createElement("button");
+        removeButton.innerText = "-";
+        removeButton.onclick = this.removePicker.bind(this);
+        this.container.appendChild(removeButton);
         //Add single element
         let addSingleElementButton = document.createElement("button")
         addSingleElementButton.innerText = "Add single element";
         addSingleElementButton.onclick = this.onAddSingleElementButtonPressed.bind(this);
         container.appendChild(addSingleElementButton);
+    }
+    setOnRemovedListener(onRemovedListener){
+        this.removedListener = onRemovedListener;
+    }
+    removePicker(){
+        this.container.parentElement.removeChild(this.container);
+        if(this.removedListener){
+            this.removedListener(this);
+        }
     }
     onAddSingleElementButtonPressed(){
         let picker = new ElementPicker(this.excludedElement);

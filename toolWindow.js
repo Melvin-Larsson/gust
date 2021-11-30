@@ -1,4 +1,5 @@
 let ignoredElements = [];
+//bra idé, är nästan lite sugen på göra en sån
 class ToolWindow{
     constructor(){
         this.offset = {y:0,x:0};
@@ -23,6 +24,9 @@ class ToolWindow{
         //Remove single element
         this.removeSingleElementButton = document.getElementById("removeSingleElementButton");
         this.removeSingleElementButton.onclick = this.onRemoveSingleElementButtonPressed.bind(this);
+        //Add element picker
+        this.addElementPickerButton = document.getElementById("addElementPicker");
+        this.addElementPickerButton.onclick = this.onAddElementPicker.bind(this);
     }
     dragMouseDown(e){
         var rect = this.windowElement.getBoundingClientRect();
@@ -45,11 +49,6 @@ class ToolWindow{
         this.pickers.forEach(picker =>{
             picker.setAvailiableIds(pickerIds);
         });
-        //Add new pickers while there are more pickerIds than pickers
-        while(pickerIds.length > this.pickers.length){
-            this.pickers.push(new ElementGroupPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
-
-        }
     }
     onExportButtonPressed(){
         this.windowElement.querySelector('.container').style.overflowY = "scroll"; //setting this property in css causes lag for some reason
@@ -119,6 +118,10 @@ class ToolWindow{
             
         });
         picker.selectElement();
+    }
+    onAddElementPicker(){
+        let pickerIds = this.getIds(this.formatString.value);
+        this.pickers.push(new ElementGroupPicker(pickerIds, document.getElementById("pickElement"), this.windowElement));
     }
     //Returns all unique placeholder string e.g. {0} and {4}
     getIds(string){

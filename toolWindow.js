@@ -61,19 +61,19 @@ class ToolWindow{
         let selectors = [];
         let unusedPickers = [...this.pickers];
         for(let i = 0; i < unusedPickers.length; i++){
-            selectors.push(unusedPickers[i].calculateSelector());
+            selectors.push({id: unusedPickers[i].idPicker.value, selector: unusedPickers[i].calculateSelector()});
             for(let j = i + 1; j < unusedPickers.length; j++){
                 if(unusedPickers[j].idPicker.value == unusedPickers[i].idPicker.value){
-                    selectors[i] += ", " + unusedPickers[j].calculateSelector();
+                    selectors[i].selector += ", " + unusedPickers[j].calculateSelector();
                     unusedPickers.splice(j, 1);
                 }
             }
         }
         //Fetch elements and create totalSelector
         selectors.forEach(selector =>{
-            let tempElements = document.querySelectorAll(selector);
-            elements.push({currentPosition: 0, elements: tempElements});
-            totalSelector += selector + ", ";
+            let tempElements = document.querySelectorAll(selector.selector);
+            elements.push({currentPosition: 0, id: selector.id, elements: tempElements});
+            totalSelector += selector.selector + ", ";
         });
         //Remove last ", " from totalSelector
         totalSelector = totalSelector.substring(0, totalSelector.length - 2);
@@ -96,7 +96,7 @@ class ToolWindow{
                     }
                     //Ignore if in ignoredElements list
                     if(!ignoredElements.includes(orderedElement)){
-                        currentString = currentString.replaceAll(`{${ids[j]}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
+                        currentString = currentString.replaceAll(`{${elementList.id}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
                     }
                     elementList.currentPosition++;
                   }

@@ -96,7 +96,7 @@ class ToolWindow{
                     }
                     //Ignore if in ignoredElements list
                     if(!ignoredElements.includes(orderedElement)){
-                        currentString = currentString.replaceAll(`{${elementList.id}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${ids[j]}}`);
+                        currentString = currentString.replaceAll(`{${elementList.id}}`, elementList.elements[elementList.currentPosition].innerText + `<br>{${elementList.id}}`);
                     }
                     elementList.currentPosition++;
                   }
